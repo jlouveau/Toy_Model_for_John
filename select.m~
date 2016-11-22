@@ -1,0 +1,35 @@
+function [selected_B_cells] = select(B_cells, Ag_number, energy_scale, overlap, conc, activation_energy, t_cell_selection)
+%   The function "select" takes a collection of B-cells, binds them (or not) 
+%   with antigens by calling the function "bind_or_die", applies T-cell 
+%   selection, and discards any with low binding energy.
+%   B_cells is a matrix whose rows are instances of B-cell (c.f. bind_or_die)
+%   T-cell factor is the proportion of B-cell-Ag complexes which receive
+%   T-cell help (why should it be a ratio, rather than an absolute?)
+
+n_B_cells = size(B_cells);
+n_B_cells = n_B_cells(1);
+
+selected_B_cells = zeros(n_B_cells, Ag_number + 3); % selected_B_cell: [ Ev1 Ev2 Ec Etot Ag_index ]
+
+index = 0;
+
+for i = 1 : n_B_cells
+    [survival, Ag_index, B_cell, weighted_energy] = bind_or_die(B_cells(i,:), Ag_number, energy_scale, overlap, conc, activation_energy);
+    if survival == 1
+        index = index + 1;
+        selected_B_cells(index,:) = [B_cell weighted_energy Ag_index];
+    end
+end
+
+selected_B_cells = selected_B_cells(1:index,:);
+selected_B_cells = sortrows(selected_B_cells, Ag_number+2, 'descend'); %sort by weighted_energy in descending order
+cutoff = floor(index*t_cell_selection);
+selected_B_cells = selected_B_cells(1:cutoff,:);
+
+i = 1;
+
+while selected_B_cells(i,Ag_number+2) >= activation_energy
+    i = i+1;
+end
+selected_B_cells = selected_B_cells(1:i-1,1:Ag_number+1);
+end
