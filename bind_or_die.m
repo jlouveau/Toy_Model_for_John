@@ -20,7 +20,7 @@ Ev = B_cell(Ag_index); %find energy for variable part of randomly chosen antigen
 Ec = B_cell(nb_Ag + 1); %find energy for conserved part
 weighted_energy = (1 - overlap)*Ev + overlap*Ec; %find overall affinity for randomly chosen antigen
 
-factor = (1/nb_Ag)*conc*exp(energy_scale*(weighted_energy - activation_energy));
+factor = conc*exp(energy_scale*(weighted_energy - activation_energy));
 langmuir = factor/(1+factor); %ratio of bound Ags over total number of B cell receptors (c.f. Shenshen)
     
 r = rand;

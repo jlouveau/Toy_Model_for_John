@@ -11,15 +11,21 @@ nb_cycle_max = 250;
 nb_trial_max = 50;
 activation_energy = 0.1;
 threshold_energy = 0.7;
-energy_scale = 10;
+energy_scale = 5;
 conc = 1;
-overlap = 0.3;
+overlap = 1;
 
 p_mut = 0.2; %per division
-p_CDR = 0.3;
+p_CDR = 1;
 p_FR_lethal = 0.8;
 p_recycle = 0.7;
-t_cell_selection = 0.35;
+t_cell_selection = 0.5;
+
+p_CDR_lethal = 0.3;
+p_CDR_silent = 0.5;
+kappa = -0.7;
+sigma = 1.2;
+mu = -1.5;
 
 %% Creating matrices for founder B cells, B cells, exit cells and record the 
 % number of GC cells that are recycled and those who exit the GC for each 
@@ -59,11 +65,11 @@ number_exit_cells(:,cycle_number) = 0;
 
 %% Stochastic process: reproduce the GC reaction many times.
 initial_cycle_number = 2 ;
-[B_cells, exit_cells, number_recycled_b_cells, number_exit_cells ] = runAffinityMaturation(B_cells, exit_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale);
+[B_cells, exit_cells, number_recycled_b_cells, number_exit_cells ] = runAffinityMaturation(B_cells, exit_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
 
 toc; 
 %% Analyze trials
-[ pop_time, total_exit_cells, neutralized, breadth, energy, affinity ] = analysis( number_recycled_b_cells, number_exit_cells, exit_cells, nb_trial_max, activation_energy, nb_cycle_max, p_mut, p_recycle, t_cell_selection, conc, p_CDR);
+[ pop_time, survival, total_exit_cells, neutralized, breadth, energy, affinity ] = analysis( number_recycled_b_cells, number_exit_cells, exit_cells, nb_trial_max, activation_energy, nb_cycle_max, p_mut, p_recycle, t_cell_selection, conc, p_CDR);
 
 
 

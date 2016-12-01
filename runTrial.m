@@ -1,4 +1,4 @@
-function [B_cells_trial, number_recycled_b_cells_trial, exit_cells_trial, number_exit_cells_trial, final_cycle ] = runTrial( B_cells_trial, exit_cells_trial, number_recycled_b_cells_trial, number_exit_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_max_B_cells, nb_cycle_max, initial_cycle_number, nb_Ag, energy_scale )  
+function [B_cells_trial, number_recycled_b_cells_trial, exit_cells_trial, number_exit_cells_trial, final_cycle ] = runTrial( B_cells_trial, exit_cells_trial, number_recycled_b_cells_trial, number_exit_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_max_B_cells, nb_cycle_max, initial_cycle_number, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu  )  
 %   The function "runTrial" runs "GC_cycle" for each cycle until the end of
 %   the GC reaction. 
 %   The GC_B_cells at the end of the GC reaction are stored
@@ -21,7 +21,7 @@ cycle_number = initial_cycle_number;
 while 1
     cycle_number = cycle_number +1;
 
-    [new_exit_cells, B_cells_trial] = GC_cycle(B_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_Ag, energy_scale);
+    [new_exit_cells, B_cells_trial] = GC_cycle(B_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
     number_recycled_b_cells_trial(cycle_number) = size(B_cells_trial,1); %n GC cells
     number_exit_cells_trial(cycle_number) = size(new_exit_cells, 1);%n exit cells
     
@@ -33,10 +33,12 @@ while 1
     
     if number_recycled_b_cells_trial(cycle_number) > nb_max_B_cells
         for c = cycle_number : nb_cycle_max
-            number_recycled_b_cells_trial(c);
+            number_recycled_b_cells_trial(c) = nb_max_B_cells;
         end
+        cycle_number = nb_cycle_max;
         break
     end
+    
     if cycle_number > nb_cycle_max -1  || isempty(B_cells_trial)
         break
     end

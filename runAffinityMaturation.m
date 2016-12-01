@@ -1,4 +1,4 @@
-function [B_cells, exit_cells, number_recycled_b_cells, number_exit_cells ] = runAffinityMaturation(B_cells, exit_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, initial_cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale)
+function [B_cells, exit_cells, number_recycled_b_cells, number_exit_cells ] = runAffinityMaturation(B_cells, exit_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, initial_cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu)
 %   "runAffinityMaturation" runs "runTrial" for each trial until the max
 %   number of trials is reached.
 %   The B_cells, exit_cells, number_recycled_b_cells and number_exit_cells 
@@ -22,7 +22,7 @@ while trial_number <= nb_trial_max
     exit_cells_trial = squeeze(exit_cells(trial_number, :, :,:));
     number_exit_cells_trial = number_exit_cells(trial_number,:);
     
-    [B_cells_trial, number_recycled_b_cells_trial, exit_cells_trial, number_exit_cells_trial, final_cycle ] = runTrial( B_cells_trial, exit_cells_trial, number_recycled_b_cells_trial, number_exit_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_max_B_cells, nb_cycle_max, initial_cycle_number, nb_Ag, energy_scale );
+    [B_cells_trial, number_recycled_b_cells_trial, exit_cells_trial, number_exit_cells_trial, final_cycle ] = runTrial( B_cells_trial, exit_cells_trial, number_recycled_b_cells_trial, number_exit_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_max_B_cells, nb_cycle_max, initial_cycle_number, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu );
     
     for j = 1:size(B_cells_trial,1) %nb_B_cells
         for k = 1:size(B_cells_trial,2) %energies

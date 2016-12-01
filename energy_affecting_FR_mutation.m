@@ -6,7 +6,6 @@ function [ mutant ] = energy_affecting_FR_mutation(wildtype,  overlap, activatio
 %   that they are as likely to be modified by a FR mutation.
 
 mutant = wildtype;                                                                                                                                                                                                                                                                                              
-for i = 1:length(wildtype)
     Ew1 = (1 - overlap)*wildtype(1) + overlap*wildtype(3);
     Ew2 = (1 - overlap)*wildtype(2) + overlap*wildtype(3);
     if Ew1 < Ew2
@@ -14,5 +13,4 @@ for i = 1:length(wildtype)
     else
         mutant = flexibility(mutant, Ew2, 2, Ew1, 1, activation_energy, threshold_energy);
     end
-end
 end
