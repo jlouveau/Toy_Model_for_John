@@ -45,11 +45,9 @@ while trial_number <= nb_trial_max
         end
     end
     
-    if final_cycle <= nb_cycle_max && number_recycled_b_cells_trial(final_cycle) ~=0
-        for i = final_cycle : nb_cycle_max
-            number_recycled_b_cells(trial_number,i) = nb_max_B_cells;
+            for c = cycle_number : nb_cycle_max
+            number_recycled_b_cells_trial(c) = nb_max_B_cells;
         end
-    end
     
     trial_number = trial_number +1;
     

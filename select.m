@@ -41,5 +41,4 @@ end
 B_cells_trial = selected_B_cells;
 B_cells_trial = B_cells_trial(1:nb_selected - 1, 1:nb_Ag + 2);
 
-
 end

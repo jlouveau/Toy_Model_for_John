@@ -16,6 +16,8 @@ function [survival, B_cell, weighted_energy] = bind_or_die(B_cell, nb_Ag, energy
 %   variable 'factor' exponentially.
 
 Ag_index = randi(nb_Ag); %randomly choose antigen
+B_cell(nb_Ag +2) = Ag_index;
+
 Ev = B_cell(Ag_index); %find energy for variable part of randomly chosen antigen
 Ec = B_cell(nb_Ag + 1); %find energy for conserved part
 weighted_energy = (1 - overlap)*Ev + overlap*Ec; %find overall affinity for randomly chosen antigen

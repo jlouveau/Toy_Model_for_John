@@ -1,18 +1,22 @@
-function [ pop_time, survival, total_exit_cells, neutralized, breadth, average_energy, affinity ] = analysis( number_recycled_b_cells, number_exit_cells, exit_cells, n_trial_max, e_act, n_cycle_max, p_mut, p_recycle, t_cell_selection, conc, p_CDR)
+function [survival] = analysis( number_recycled_b_cells, number_exit_cells, exit_cells, n_trial_max, e_act, n_cycle_max, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles)
 %
 
 %% GC population
-pop_time = mean(number_recycled_b_cells,1);
+% pop_time = mean(number_recycled_b_cells,1);
+% 
+% figure(); plot(pop_time);
+% %title({['Population of GC b cells over time for 2 Ags with mutations only in the CDR']; ['averaged over ', num2str(n_trial_max), ' trials']; [' with proba recycle = ' num2str(p_recycle) ', proba mutation = ' num2str(p_mut) ', concentration = ' num2str(conc) ' and t cell selection rate = ' num2str(t_cell_selection)]});
+% title({['Population of GC b cells for 2 Ags']; ['averaged over ' num2str(n_trial_max) ' trials and conc = ' num2str(conc) ' proba CDR = ' num2str(p_CDR)]});
+% xlabel('Number of cycles', 'Fontweight', 'bold');
+% set(gca,'FontSize',6);
 
-figure(); plot(pop_time);
-%title({['Population of GC b cells over time for 2 Ags with mutations only in the CDR']; ['averaged over ', num2str(n_trial_max), ' trials']; [' with proba recycle = ' num2str(p_recycle) ', proba mutation = ' num2str(p_mut) ', concentration = ' num2str(conc) ' and t cell selection rate = ' num2str(t_cell_selection)]});
-title({['Population of GC b cells for 2 Ags']; ['averaged over ' num2str(n_trial_max) ' trials and conc = ' num2str(conc) ' proba CDR = ' num2str(p_CDR)]});
-xlabel('Number of cycles', 'Fontweight', 'bold');
-set(gca,'FontSize',6);
+figure();
+x = linspace(2,200,1000);
+curve1 = 1536 * (4 * (1-p_mut)^2 * p_recycle * t_cell_selection * conc /(1+conc) ).^(x-2);
+plot(x, curve1, ':');
 
-figure(); 
 for i = 1:n_trial_max
-    plot(number_recycled_b_cells(i,:)); hold on;
+    hold on; plot(number_recycled_b_cells(i,:)); 
 end
 title({['Population of GC b cells for 2 Ags']; [' conc = ' num2str(conc) ' proba CDR = ' num2str(p_CDR)]}, 'Fontweight', 'bold');
 xlabel('Number of cycles', 'Fontweight', 'bold');
@@ -20,14 +24,24 @@ set(gca,'FontSize',6);
 
 %% GC survival rate
 survival = 0;
+bla = 0;
 for i = 1:n_trial_max
-    if number_recycled_b_cells(i,n_cycle_max -1) ~= 0
+    if final_cycles(i) == 3
+        bla = bla +1;
+    end
+    if number_recycled_b_cells(i, final_cycles(i)) ~= 0
         survival = survival + 1;
     end
 end
 survival = survival / n_trial_max;
+bla = bla / n_trial_max;
 disp(['ratio of GCs that survive ' num2str(survival)]);
+disp(['ratio of GCs that stop early ' num2str(bla)]);
 
+% %% final cycle
+% figure(); histogram(final_cycles, 'Normalization', 'probability', 'BinWidth', 10);
+% title('Number of cycles for each trial', 'Fontweight', 'bold');
+% set(gca,'FontSize',6);
 %% breadth 
 % fraction of exit_cells with affinity for both Ags above a threshold for different thresholds
 % B_cells = zeros(nb_trial_max, nb_max_B_cells, nb_Ag + 2);
