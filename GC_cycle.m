@@ -1,4 +1,4 @@
-function [ new_exit_cells, B_cells_trial ] = GC_cycle( B_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu)
+function [new_exit_cells, B_cells_trial] = GC_cycle( B_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu)
 %   GC_cycle will modify the B_cells_trial matrix (remove those that have lethal
 %   mutation etc...) and it will create the output of new_exit_cells.
 %   GC reaction is in three steps:
@@ -28,6 +28,7 @@ B_cells_trial = select(B_cells_trial, nb_Ag, energy_scale, overlap, conc, activa
 %%RECYCLE
 %% randomly pick exit_cells from the selected b_cells.
 [ B_cells_trial, new_exit_cells ] = recycling(B_cells_trial, p_recycle);
+%[ B_cells_trial ] = recycling(B_cells_trial, p_recycle);
 
 end
 

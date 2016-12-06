@@ -7,14 +7,14 @@ function [B_cells_trial] = select(B_cells_trial, nb_Ag, energy_scale, overlap, c
 %   T-cell help (why should it be a ratio, rather than an absolute?)
 
 
-%B_cells_trial = zeros(n_max_Bcells, nb_Ag + 2);
+%B_cells_trial = zeros(n_max_Bcells, nb_Ag + 3);
 nb_B_cells = size(B_cells_trial);
 nb_B_cells = nb_B_cells(1);
 
-selected_B_cells = zeros(nb_B_cells, nb_Ag + 3); % selected_B_cell: [ [Ev1 Ev2 Ec Ag_index] Ew]
+selected_B_cells = zeros(nb_B_cells, nb_Ag + 4); % selected_B_cell: [ [Ev1 Ev2 Ec Ag_index] Ew]
 
+%% Ag binding
 index = 0;
-
 for i = 1 : nb_B_cells
     [survival, B_cell, weighted_energy] = bind_or_die(B_cells_trial(i,:), nb_Ag, energy_scale, overlap, conc, activation_energy);
     if survival == 1
@@ -24,8 +24,9 @@ for i = 1 : nb_B_cells
 end
 %index is the number of B cells that survive binding
 
+%% T cell help
 selected_B_cells = selected_B_cells(1:index, :);
-selected_B_cells = sortrows(selected_B_cells, -(nb_Ag+3)); %sort by weighted_energy in descending order
+selected_B_cells = sortrows(selected_B_cells, -(nb_Ag+4)); %sort by weighted_energy in descending order
 cutoff = floor(index*t_cell_selection);
 selected_B_cells = selected_B_cells(1:cutoff, :);
 %cutoff is the number of B cells that survive T cell selection
@@ -34,11 +35,13 @@ nb_selected = 1;
 %nb_selected is the number of B cells that meet the energy activation
 %threshold
 
+%% Activation threshold
 while (nb_selected <= cutoff && selected_B_cells(nb_selected, nb_Ag+3) >= activation_energy)
     nb_selected = nb_selected + 1;
 end
 
 B_cells_trial = selected_B_cells;
 B_cells_trial = B_cells_trial(1:nb_selected - 1, 1:nb_Ag + 2);
-
+%%
+B_cells_trial = selected_B_cells(:, 1:nb_Ag + 3);
 end

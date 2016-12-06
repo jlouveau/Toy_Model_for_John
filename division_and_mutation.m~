@@ -7,7 +7,7 @@ function [ daughters ] = division_and_mutation( B_cells_trial, activation_energy
 %% Division
 % size of daughters = (2*nb_max_B_cells, nb_Ag +3)
 daughters = cat(1,B_cells_trial, B_cells_trial);
-
+size(daughters)
 %% Somatic Hyper-Mutation 
 for n = 1:size(daughters,1)
     rand_mut = rand;   
@@ -21,8 +21,8 @@ for n = 1:size(daughters,1)
         end
     end
 end
-
+size(daughters)
 %% Removes the cells that got lethal mutations (empty mutant)
-daughters = daughters(isnan(daughters(:,1)) < 1, :);
+% daughters = daughters(isnan(daughters(:,1)) < 1, :);
 
 end

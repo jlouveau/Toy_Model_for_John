@@ -49,7 +49,7 @@ tic;
 %cycle 1: creates founders
 cycle_number = 1;
 % founder_B_cells = zeros(nb_founders, nb_Ag + 3);
-founder_B_cells = create_founders(indices, nb_Ag, activation_energy);
+founder_B_cells = create_founders(indices, nb_Ag, activation_energy, 0 );
  
 number_recycled_b_cells(:,cycle_number) = nb_founders;
 number_exit_cells(:,cycle_number) = 0;
@@ -64,12 +64,12 @@ number_recycled_b_cells(:,cycle_number) = size(B_cells,2);
 number_exit_cells(:,cycle_number) = 0;
 
 %% Stochastic process: reproduce the GC reaction many times.
-initial_cycle_number = 2;
-%[B_cells, exit_cells, number_recycled_b_cells, number_exit_cells, final_cycles ] = runAffinityMaturation(B_cells, exit_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
-[B_cells, number_recycled_b_cells, number_exit_cells, final_cycles ] = runAffinityMaturation(B_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, initial_cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
+initial_cycle_number = 2 ;
+[B_cells, exit_cells, number_recycled_b_cells, number_exit_cells, final_cycles ] = runAffinityMaturation(B_cells, exit_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
+
 toc; 
 %% Analyze trials
-[ survival] = analysis(B_cells, number_recycled_b_cells, nb_trial_max, nb_max_B_cells, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag);
+[ survival] = analysis(B_cells, number_recycled_b_cells, nb_trial_max, activation_energy, nb_cycle_max, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag);
 
 
 

@@ -3,20 +3,25 @@ function [ mutant ] = mutation( wildtype, activation_energy, threshold_energy, p
 %   The type of mutation is determined and its effect on the energies for 
 %   the two Ags is reported in the modified mutant matrix.
 
-% size of mutant is (1, nb_Ag +2)
+% size of mutant is (1, nb_Ag +3)
 % mutant = wildtype;
 % 
 % mutant = wildtype;
- 
+
 rand_CDR = rand;
 rand_type = rand;
+
+mutant = wildtype;
+
+mutant(length(wildtype)) = wildtype(length(wildtype)) + 1;
 
 if rand_CDR <= p_CDR
     %% Mutation in the Complementarity-Determining Region
     if rand_type < p_CDR_lethal
+        %disp('lethal');
         mutant = [];
     elseif rand_type >= p_CDR_lethal && rand_type < p_CDR_lethal + p_CDR_silent
-        mutant = wildtype;
+        %disp('silent');
     else
         mutant = energy_affecting_CDR_mutation(wildtype, kappa, sigma, mu);    
     end
@@ -28,5 +33,8 @@ else
         mutant = energy_affecting_FR_mutation(wildtype,  overlap, activation_energy, threshold_energy);    
     end
 end
+
+%%adds mutation
+ 
 end
 
