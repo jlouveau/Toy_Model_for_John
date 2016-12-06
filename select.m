@@ -22,26 +22,30 @@ for i = 1 : nb_B_cells
         selected_B_cells(index,:) = [B_cell weighted_energy];
     end
 end
+selected_B_cells = selected_B_cells(1:index, :);
 %index is the number of B cells that survive binding
+B_cells_trial = selected_B_cells(:, 1:nb_Ag + 3);
+%disp(['n_bound ' num2str(size(B_cells_trial,1))]);
 
 %% T cell help
-selected_B_cells = selected_B_cells(1:index, :);
 selected_B_cells = sortrows(selected_B_cells, -(nb_Ag+4)); %sort by weighted_energy in descending order
 cutoff = floor(index*t_cell_selection);
 selected_B_cells = selected_B_cells(1:cutoff, :);
+B_cells_trial = selected_B_cells(:, 1:nb_Ag + 3);
 %cutoff is the number of B cells that survive T cell selection
+%disp(['n_helped ' num2str(size(B_cells_trial,1))]);
 
 nb_selected = 1;
 %nb_selected is the number of B cells that meet the energy activation
 %threshold
 
 %% Activation threshold
-while (nb_selected <= cutoff && selected_B_cells(nb_selected, nb_Ag+3) >= activation_energy)
+while (nb_selected <= cutoff && selected_B_cells(nb_selected, nb_Ag+4) >= activation_energy)
     nb_selected = nb_selected + 1;
 end
 
-B_cells_trial = selected_B_cells;
-B_cells_trial = B_cells_trial(1:nb_selected - 1, 1:nb_Ag + 2);
+%B_cells_trial = selected_B_cells;
+%B_cells_trial = B_cells_trial(1:nb_selected - 1, 1:nb_Ag + 2);
 %%
 B_cells_trial = selected_B_cells(:, 1:nb_Ag + 3);
 end

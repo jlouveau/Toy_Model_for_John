@@ -41,7 +41,7 @@ disp(['ratio of GCs that survive ' num2str(survival)]);
 disp(['ratio of GCs that stop early ' num2str(early)]);
 
 %% final cycle
-figure(); histogram(final_cycles, 'Normalization', 'probability', 'BinWidth', 10);
+figure(); histogram(final_cycles, 'Normalization', 'probability', 'BinWidth', 5);
 title('Number of cycles for each trial', 'Fontweight', 'bold');
 set(gca,'FontSize',6);
 

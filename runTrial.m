@@ -21,6 +21,7 @@ cycle_number = initial_cycle_number;
 
 while 1
     cycle_number = cycle_number +1;
+    %disp(['cycle_number ' num2str(cycle_number)]);
     %[new_exit_cells, B_cells_trial] = GC_cycle(B_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
     [new_exit_cells, B_cells_trial] = GC_cycle( B_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
     number_recycled_b_cells_trial(cycle_number) = size(B_cells_trial,1); %n GC cells
@@ -33,7 +34,8 @@ while 1
 %     end
     
     if number_recycled_b_cells_trial(cycle_number) > nb_max_B_cells
-        cycle_number= cycle_number +1;
+        %disp(['size when break ' num2str(size(B_cells_trial,1))]);
+        cycle_number = cycle_number +1;
         break
     end
     
@@ -44,7 +46,7 @@ end
 
 final_cycle = cycle_number - 1;
 
-if final_cycle <= 3 && number_recycled_b_cells_trial(final_cycle) >= nb_max_B_cells
+if final_cycle <=3 && number_recycled_b_cells_trial(final_cycle) >= nb_max_B_cells
     csvwrite('earlyCells.csv' ,B_cells_trial);
 else
     csvwrite('regular.csv' ,B_cells_trial);

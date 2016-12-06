@@ -26,7 +26,7 @@ factor = conc*exp(energy_scale*(weighted_energy - activation_energy));
 langmuir = factor/(1+factor); %ratio of bound Ags over total number of B cell receptors (c.f. Shenshen)
     
 r = rand;
-if r > langmuir  %B-cell dies!
+if r >= langmuir  %B-cell dies!
     survival = 0;
 else %B-cell binds!
     survival = 1;

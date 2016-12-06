@@ -13,22 +13,22 @@ function [new_exit_cells, B_cells_trial] = GC_cycle( B_cells_trial, conc, activa
 %% for each B cell, determine if there is mutation, whether it's in the CDR or FR and the type of mutation. Then change the affinities (or delete) accordingly.
 
 % 1st division + SHM
-daughters1 = division_and_mutation(B_cells_trial, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, overlap, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu );
+daughters1 = division_and_mutation(B_cells_trial, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, overlap, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu, nb_Ag );
 %disp('size after first division_mutation '); disp(size(B_cells_trial));
 
 %2nd division + SHM
-B_cells_trial = division_and_mutation(daughters1, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, overlap, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu );
-%disp('size after second division_mutation '); disp(size(B_cells_trial));
+B_cells_trial = division_and_mutation(daughters1, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, overlap, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu, nb_Ag );
+%disp(['size after second division_mutation ' num2str(size(B_cells_trial,1))]);
 
 %%LIGHT ZONE: selection
 %% B cells that have affinity at least higher than a threshold and are in the top portion remain. 
 B_cells_trial = select(B_cells_trial, nb_Ag, energy_scale, overlap, conc, activation_energy, t_cell_selection);
-%disp('size after selection '); disp(size(B_cells_trial));
+%disp(['size after selection ' num2str(size(B_cells_trial,1))]);
 
 %%RECYCLE
 %% randomly pick exit_cells from the selected b_cells.
 [ B_cells_trial, new_exit_cells ] = recycling(B_cells_trial, p_recycle);
 %[ B_cells_trial ] = recycling(B_cells_trial, p_recycle);
-
+%disp(['size after recycling ' num2str(size(B_cells_trial,1))]);
 end
 
