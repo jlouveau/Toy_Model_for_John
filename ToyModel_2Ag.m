@@ -7,8 +7,8 @@ nb_Ag = 2;
 nb_founders = 3;
 rep = 9;
 nb_max_B_cells = nb_founders*2^rep;
-nb_cycle_max = 150;
-nb_trial_max = 20;
+nb_cycle_max = 200;
+nb_trial_max = 50;
 activation_energy = 0.1;
 threshold_energy = 0.7;
 energy_scale = 0.3;
@@ -57,11 +57,11 @@ number_exit_cells(:,cycle_number) = 0;
 %cycle 2: replication without mutation
 cycle_number = cycle_number + 1;
 
-% B_cells = zeros(nb_trial_max, nb_max_B_cells, nb_Ag + 2);
+% B_cells = zeros(nb_trial_max, nb_max_B_cells, nb_Ag + 3);
 B_cells = replication(founder_B_cells, rep, nb_trial_max, nb_max_B_cells, nb_Ag);
 
-number_recycled_b_cells(:,cycle_number) = size(B_cells,2);
-number_exit_cells(:,cycle_number) = 0;
+number_recycled_b_cells(:,cycle_number) = size(B_cells,2);   
+number_exit_cells(:,cycle_number) = 0;      
 
 %% Stochastic process: reproduce the GC reaction many times.
 initial_cycle_number = 2;

@@ -29,7 +29,9 @@ while trial_number <= nb_trial_max
 
     final_cycles(trial_number) = final_cycle;
     
-    for j = 1:size(B_cells_trial,1) %nb_B_cells
+    gusnumber = min(size(B_cells_trial,1), nb_max_B_cells);
+    
+    for j = 1:gusnumber %nb_B_cells I CHANGED THIS!!!
         for k = 1:size(B_cells_trial,2) %energies & mutations
             B_cells(trial_number, j,k) = B_cells_trial(j,k);
         end

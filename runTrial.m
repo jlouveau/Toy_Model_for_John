@@ -35,7 +35,6 @@ while 1
     
     if number_recycled_b_cells_trial(cycle_number) > nb_max_B_cells
         %disp(['size when break ' num2str(size(B_cells_trial,1))]);
-        cycle_number = cycle_number +1;
         break
     end
     

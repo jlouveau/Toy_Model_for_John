@@ -20,8 +20,10 @@ if rand_CDR <= p_CDR
         mutant = [];
     elseif rand_type > p_CDR_lethal + p_CDR_silent
 %         %disp('silent');
-%     else
+          %mutant(nb_Ag+3) = mutant(nb_Ag+3) -1; %we're not counting silent mutations
+     else
         mutant = energy_affecting_CDR_mutation(mutant, kappa, sigma, mu, nb_Ag);    
+        mutant(nb_Ag+3) = mutant(nb_Ag+3) +1;
     end
 else
     %% Mutation in the Framework Region
