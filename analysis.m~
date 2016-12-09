@@ -1,4 +1,4 @@
-function [muts] = analysis( success, B_cells, number_recycled_b_cells, nb_trial_max, nb_max_B_cells, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag, nb_cycle_max)
+function [gusmuts] = analysis( success, B_cells, number_recycled_b_cells, nb_trial_max, nb_max_B_cells, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag, nb_cycle_max)
 %
 
 %% GC population
@@ -44,31 +44,22 @@ disp(['ratio of GCs that are successful ' num2str(success)]);
 % disp(['ratio of GCs that stop early ' num2str(early)]);
 
 %% final cycle
-figure(); histogram(final_cycles, 'Normalization', 'probability', 'BinWidth', 5);
+figure(); bar(final_cycles, 0.8);
 title('Number of cycles until GC reaction stops ', 'Fontweight', 'bold');
 set(gca,'FontSize',10);
-% final_cycles_talied = zeros(nb_cycle_max,1);
-% for i = 1:nb_trial_max
-%     final_cycles_talied(final_cycles(i),1) = final_cycles_talied(final_cycles(i),1) +1;
-% end
-% figure(); bar(final_cycles_talied, 0.8);
-% title('Number of cycles until GC reaction stops ', 'Fontweight', 'bold');
-% set(gca,'FontSize',10);
+
 %% mutations
 gusmuts = zeros(50,1);
-total = 0;
 for i = 1:nb_trial_max
     if number_recycled_b_cells(i, final_cycles(i)) > 0
         for j = 1:number_recycled_b_cells(i, final_cycles(i))
             k = B_cells(i,j,nb_Ag+3);
             gusmuts(k+1,1) = gusmuts(k+1,1)+1;
-            total = total +1;
         end
     end
 end
-muts = gusmuts/total;
 
-figure(); bar(muts, 0.8);
+figure(); bar(gusmuts, 0.8);
 title('Number of mutations for the B cells that are in the GC at the end ', 'Fontweight', 'bold');
 set(gca,'FontSize',10);
 

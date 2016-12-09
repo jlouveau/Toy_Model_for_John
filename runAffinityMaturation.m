@@ -1,4 +1,4 @@
-function [B_cells, number_recycled_b_cells, number_exit_cells, final_cycles ] = runAffinityMaturation(B_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, initial_cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu)
+function [B_cells, number_recycled_b_cells, number_exit_cells, final_cycles, success ] = runAffinityMaturation(B_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, initial_cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu)
 %   "runAffinityMaturation" runs "runTrial" for each trial until the max
 %   number of trials is reached.
 %   The B_cells, exit_cells, number_recycled_b_cells and number_exit_cells 
@@ -12,7 +12,7 @@ function [B_cells, number_recycled_b_cells, number_exit_cells, final_cycles ] = 
 % initial_cycle_number = 2;
 
 trial_number = 1;
-
+success = 0;
 final_cycles = zeros(nb_trial_max,1);
 
 while trial_number <= nb_trial_max
@@ -25,7 +25,7 @@ while trial_number <= nb_trial_max
     number_exit_cells_trial = number_exit_cells(trial_number,:);
     
     %[B_cells_trial, number_recycled_b_cells_trial, exit_cells_trial, number_exit_cells_trial, final_cycle ] = runTrial( B_cells_trial, exit_cells_trial, number_recycled_b_cells_trial, number_exit_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_max_B_cells, nb_cycle_max, initial_cycle_number, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu );
-    [B_cells_trial, number_recycled_b_cells_trial, number_exit_cells_trial, final_cycle ] = runTrial( B_cells_trial, number_recycled_b_cells_trial, number_exit_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_max_B_cells, nb_cycle_max, initial_cycle_number, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu );
+    [B_cells_trial, number_recycled_b_cells_trial, number_exit_cells_trial, final_cycle, success ] = runTrial(success, B_cells_trial, number_recycled_b_cells_trial, number_exit_cells_trial, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, overlap, nb_max_B_cells, nb_cycle_max, initial_cycle_number, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu );
 
     final_cycles(trial_number) = final_cycle;
     

@@ -7,8 +7,8 @@ nb_Ag = 2;
 nb_founders = 3;
 rep = 9;
 nb_max_B_cells = nb_founders*2^rep;
-nb_cycle_max = 200;
-nb_trial_max = 50;
+nb_cycle_max = 3;
+nb_trial_max = 5000;
 activation_energy = 0.1;
 threshold_energy = 0.7;
 energy_scale = 0.3;
@@ -66,10 +66,10 @@ number_exit_cells(:,cycle_number) = 0;
 %% Stochastic process: reproduce the GC reaction many times.
 initial_cycle_number = 2;
 %[B_cells, exit_cells, number_recycled_b_cells, number_exit_cells, final_cycles ] = runAffinityMaturation(B_cells, exit_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
-[B_cells, number_recycled_b_cells, number_exit_cells, final_cycles ] = runAffinityMaturation(B_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, initial_cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
+[B_cells, number_recycled_b_cells, number_exit_cells, final_cycles, success ] = runAffinityMaturation(B_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, initial_cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
 toc; 
 %% Analyze trials
-[ survival] = analysis(B_cells, number_recycled_b_cells, nb_trial_max, nb_max_B_cells, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag);
+[muts] = analysis(success, B_cells, number_recycled_b_cells, nb_trial_max, nb_max_B_cells, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag, nb_cycle_max);
 
 
 

@@ -12,7 +12,7 @@ daughters = cat(1,B_cells_trial, B_cells_trial);
 for n = 1:size(daughters,1)
     rand_mut = rand;   
     if rand_mut < p_mut %mutation occurs
-%         daughters(n, nb_Ag + 3) = daughters(n, nb_Ag + 3) + 1;
+        daughters(n, nb_Ag + 3) = daughters(n, nb_Ag + 3) + 1;
         mutant = mutation(daughters(n,:), activation_energy, threshold_energy, p_CDR, p_FR_lethal, overlap, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu, nb_Ag );
 %        daughters(n,:) = mutant(1,:);
         if ~isempty(mutant)
