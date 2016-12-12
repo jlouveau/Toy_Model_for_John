@@ -19,7 +19,7 @@ p_FR_lethal  = 0.8                              # probability that a framework (
 p_FR_silent  = 0.                               # probability that a FR mutation is silent
 p_FR_affect  = 1. - p_FR_lethal - p_FR_silent   # probability that a FR mutation affects affinity
 
-nb_Ag        = 1               # number of antigens
+nb_Ag        = 2               # number of antigens
 conc         = 1.20            # antigen concentration
 energy_scale = 0.30            # inverse temperature
 help_cutoff  = 0.70            # only B cells in the top (help_cutoff) fraction of binders receive T cell help
@@ -227,16 +227,16 @@ def print_update(current, end, bar_length=20):
     sys.stdout.flush()
 
 
-def run_dark_zone(B_cells):
+def run_dark_zone(B_cells, nb_rounds = 2):
     """ B cells proliferate and undergo SHM in the dark zone. """
     
-    n_rounds = 2
-    for i in range(n_rounds):
+    for i in range(nb_rounds):
         new_cells = []
         for b in B_cells:
             b.divide()
             new_cells += b.shm()
         B_cells = new_cells
+    return B_cells
 
 
 def run_binding_selection(B_cells):
@@ -342,10 +342,10 @@ def run_recycle(B_cells):
 def run_GC_cycle(B_cells):
     """ Run one cycle of the GC reaction. """
 
-    run_dark_zone(B_cells)          # DARK  ZONE - two rounds of division + SHM
-    run_binding_selection(B_cells)  # LIGHT ZONE - selection for binding to Ag
-    run_help_selection(B_cells)     # LIGHT ZONE - selection to receive T cell help
-    return run_recycle(B_cells)     # RECYCLE    - randomly pick exiting cells from the surviving B cells
+    B_cells = run_dark_zone(B_cells)    # DARK  ZONE - two rounds of division + SHM
+    run_binding_selection(B_cells)      # LIGHT ZONE - selection for binding to Ag
+    run_help_selection(B_cells)         # LIGHT ZONE - selection to receive T cell help
+    return run_recycle(B_cells)         # RECYCLE    - randomly pick exiting cells from the surviving B cells
 
 
 ################################################
@@ -353,30 +353,157 @@ def run_GC_cycle(B_cells):
 def test_dark_zone():
     """ Test the run_dark_zone function. """
     
+    print('test_dark_zone...')
+    if p_CDR<1:
+        print('Rewrite this test without assuming p_CDR=1!')
+        return 0
+    
     n_clones    = []
     n_cells_max = []
     n_tests     = 10000
+    n_cells     = 1000
     
     for i in range(n_tests):
-        test_cells = [BCell(nb = 1000)]
-        run_dark_zone(test_cells)
-
+        test_cells = [BCell(nb = n_cells)]
+        test_cells = run_dark_zone(test_cells, nb_rounds=1)
+        
         temp_clones = 0
         temp_max    = 0
         for b in test_cells:
             if b.nb>0:        temp_clones += 1
-            if b.nb>temp_max: temp_max=b.nb
+            if b.nb>temp_max: temp_max     = b.nb
         n_clones.append(temp_clones)
         n_cells_max.append(temp_max)
 
-    
+    E_cells_max     = 2. * n_cells * (1. - p_mut + (p_mut * p_CDR_silent))           # = np
+    E_std_cells_max = np.sqrt( E_cells_max * (1. - (E_cells_max / (2. * n_cells))) ) # = sqrt(np(1-p))
 
+    print('E(max cells):     %.3e\tgot: %.3e' % (E_cells_max,    np.mean(n_cells_max)))
+    print('E(std max cells): %.3e\tgot: %.3e' % (E_std_cells_max, np.std(n_cells_max)))
+
+    E_clones     = 2. * n_cells * p_mut * p_CDR_affect
+    E_std_clones = np.sqrt( E_clones * (1. - (E_clones / (2. * n_cells))))
+
+    print('E(clones):        %.3e\tgot: %.3e' % (E_clones,    np.mean(n_clones)))
+    print('E(std clones):    %.3e\tgot: %.3e' % (E_std_clones, np.std(n_clones)))
+    print('')
+
+
+def test_binding_selection():
+    """ Test the run_binding_selection function. """
+    
+    print('test_binding_selection...')
+    if nb_Ag!=2:
+        print('Rewrite this function for nb_Ag!=2!')
+        return 0
+    
+    n_bound_d = []
+    n_survive = []
+    n_tests   = 100000
+    test_E    = np.array([ 0.,  1.,  2.,  4.])
+    n_cells   = np.array([250, 250, 250, 250])
+    
+    for t in range(n_tests):
+        test_cells = [BCell(nb = n_cells[i], Ec = test_E[i], Ev = [0 for k in range(nb_Ag)]) for i in range(len(test_E))]
+        run_binding_selection(test_cells)
+
+        n_bound_d.append([b.last_bound[0]-b.last_bound[1] for b in test_cells])
+        n_survive.append([b.nb                            for b in test_cells])
+        for b in test_cells:
+            if b.nb!=np.sum(b.last_bound):
+                print('b.nb!=sum(b.last_bound)!')
+                return 1
+
+    n_bound_d = np.array(n_bound_d)
+    n_survive = np.array(n_survive)
+
+    E_bound_d = [0., 0., 0., 0.]
+
+    print('E(bound difference): '+str(E_bound_d)+'\tgot: '+str(np.mean(n_bound_d, axis=0)))
+
+    E_survive     = n_cells * (conc * np.exp(energy_scale * test_E) / (1. + (conc * np.exp(energy_scale * test_E))))
+    E_std_survive = np.sqrt( E_survive * (1. - (E_survive / np.array(n_cells, float))))
+
+    print('E(survive):     '+str(E_survive)    +'\tgot: '+str(np.mean(n_survive, axis=0)))
+    print('E(std survive): '+str(E_std_survive)+'\tgot: '+str( np.std(n_survive, axis=0)))
+    print('')
+
+
+def test_help_selection():
+    """ Test the run_help_selection function. """
+    
+    print('test_help_selection...')
+    if help_cutoff!=0.7:
+        print('Rewrite this for a different value of help_cutoff!')
+    
+    test_E     = np.array([ 0.,  1.,  2.,  4.])
+    n_cells    = np.array([250, 250, 250, 250])
+    test_cells = [BCell(nb = n_cells[i], Ec = test_E[i], Ev = [0 for k in range(nb_Ag)]) for i in range(len(test_E))]
+    run_help_selection(test_cells)
+
+    n_survive = [b.nb for b in test_cells]
+    E_survive = [0, 200, 250, 250]
+
+    print('E(survive): '+str(E_survive)+'  \tgot: '+str(n_survive))
+
+    test_E     = np.array([ 4.,  1.,  2.,  0.])
+    n_cells    = np.array([250, 250, 250, 250])
+    test_cells = [BCell(nb = n_cells[i], Ec = test_E[i], Ev = [0 for k in range(nb_Ag)]) for i in range(len(test_E))]
+    run_help_selection(test_cells)
+
+    n_survive = [b.nb for b in test_cells]
+    E_survive = [250, 200, 250, 0]
+
+    print('E(survive): '+str(E_survive)+'  \tgot: '+str(n_survive))
+
+    test_E    = np.array([ 0.,  0.,  0.,  0.])
+    n_cells   = np.array([250, 250, 250, 250])
+    E_survive = [175, 175, 175, 175]
+    n_survive = []
+    n_tests   = 10000
+    for t in range(n_tests):
+        test_cells = [BCell(nb = n_cells[i], Ec = test_E[i], Ev = [0 for k in range(nb_Ag)]) for i in range(len(test_E))]
+        run_help_selection(test_cells)
+        n_survive.append([b.nb for b in test_cells])
+
+    print('E(survive): '+str(E_survive)+'\tgot: '+str(np.mean(n_survive, axis=0)))
+    print('')
+
+
+def test_recycle():
+    """ Test the run_recycle function. """
+    
+    print('test_recycle...')
+    if p_recycle!=0.7:
+        print('Rewrite this for a different value of p_recycle!')
+
+    n_cells   = np.array([250, 250, 250, 250])
+    E_recycle = [175, 175, 175, 175]
+    n_recycle = []
+    E_exit    = [75, 75, 75, 75]
+    n_exit    = []
+    n_tests   = 10000
+    for t in range(n_tests):
+        test_cells = [BCell(nb = n) for n in n_cells]
+        new, exit  = run_recycle(test_cells)
+        
+        n_recycle.append([b.nb for b in new])
+        n_exit.append(   [b.nb for b in exit])
+
+    print('E(recycle): '+str(E_recycle)+'\tgot: '+str(np.mean(n_recycle, axis=0)))
+    print('E(exit):    '+str(E_exit)   +'\tgot: '+str(np.mean(n_exit,    axis=0)))
+    print('')
 
 
 def run_tests():
     """ Run diagnostic tests to make sure that the code is functioning as expected. """
-    pass
 
+    print('running tests\n')
+    test_dark_zone()
+    test_binding_selection()
+    test_help_selection()
+    test_recycle()
+    print('done')
 
 
 if __name__ == '__main__': main()
