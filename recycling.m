@@ -9,6 +9,7 @@ function [ B_cells_trial, new_exit_cells ] = recycling(B_cells_trial, p_recycle)
 n_selected = floor(size(B_cells_trial,1));
 n_exit = floor((1 - p_recycle)*n_selected);
 new_exit_cells = zeros(n_exit, size(B_cells_trial,2));
+%disp(['n_selected ' num2str(n_selected)]);
 
 for k = 1:n_exit
     ind = randi(size(B_cells_trial,1)); %randomly pick a cell in B_cells_trial
@@ -17,4 +18,5 @@ for k = 1:n_exit
     end
     B_cells_trial(ind, :) = []; % remove that b_cell from the list of GC b cells.
 end
+%disp(['n_recycled ' num2str(size(B_cells_trial,1))]);
 end

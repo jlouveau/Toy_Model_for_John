@@ -2,7 +2,7 @@ function [B_cells] = replication(founder_B_cells, rep, nb_trial_max, nb_max_B_ce
 % "replication" takes the founder cells and replicates them without
 % mutation.
 
-B_cells = zeros(nb_trial_max, nb_max_B_cells, nb_Ag + 2);
+B_cells = zeros(nb_trial_max, nb_max_B_cells, nb_Ag + 3);
 nb_founders = size(founder_B_cells,1);
 
 for f = 1 : nb_founders

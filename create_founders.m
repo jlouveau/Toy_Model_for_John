@@ -15,7 +15,7 @@ function [ founder_B_cells ] = create_founders(indices, nb_Ag, activation_energy
 nb_founders = length(indices);
 nb_founders = nb_founders(1);
 
-founder_B_cells = zeros(nb_founders, nb_Ag + 2);
+founder_B_cells = zeros(nb_founders, nb_Ag + 3);
 
 for f = 1 : nb_founders
     rand_f = rand;

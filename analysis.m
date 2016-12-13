@@ -1,133 +1,76 @@
-function [survival] = analysis( number_recycled_b_cells, number_exit_cells, exit_cells, n_trial_max, e_act, n_cycle_max, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles)
-%
-
-%% GC population
-% pop_time = mean(number_recycled_b_cells,1);
-% 
-% figure(); plot(pop_time);
-% %title({['Population of GC b cells over time for 2 Ags with mutations only in the CDR']; ['averaged over ', num2str(n_trial_max), ' trials']; [' with proba recycle = ' num2str(p_recycle) ', proba mutation = ' num2str(p_mut) ', concentration = ' num2str(conc) ' and t cell selection rate = ' num2str(t_cell_selection)]});
-% title({['Population of GC b cells for 2 Ags']; ['averaged over ' num2str(n_trial_max) ' trials and conc = ' num2str(conc) ' proba CDR = ' num2str(p_CDR)]});
-% xlabel('Number of cycles', 'Fontweight', 'bold');
-% set(gca,'FontSize',6);
-
+function [muts] = analysis( success, B_cells, number_recycled_b_cells, nb_trial_max, nb_max_B_cells, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag, nb_cycle_max)
+%% GC population over time
 figure();
-x = linspace(2,200,1000);
-curve1 = 1536 * (4 * (1-p_mut)^2 * p_recycle * t_cell_selection * conc /(1+conc) ).^(x-2);
-plot(x, curve1, ':');
+% x = linspace(2,200,1000);
+% curve1 = nb_max_B_cells * (4 * (1-p_mut)^2 * p_recycle * t_cell_selection * conc /(1+conc) ).^(x-2);
+% plot(x, curve1, ':');
 
-for i = 1:n_trial_max
-    hold on; plot(number_recycled_b_cells(i,:)); 
+for i = 1:nb_trial_max
+    for j = 1:final_cycles(i)
+        hold on; plot(number_recycled_b_cells(i,1:j)); 
+    end
 end
-title({['Population of GC b cells for 2 Ags']; [' conc = ' num2str(conc) ' proba CDR = ' num2str(p_CDR)]}, 'Fontweight', 'bold');
+title({['Population of GC b cells for 1 Ag over time']; [' conc = ' num2str(conc) ' proba CDR = ' num2str(p_CDR)]}, 'Fontweight', 'bold');
 xlabel('Number of cycles', 'Fontweight', 'bold');
-set(gca,'FontSize',6);
+set(gca,'FontSize',10);
 
-%% GC survival rate
-survival = 0;
-bla = 0;
-for i = 1:n_trial_max
-    if final_cycles(i) == 3
-        bla = bla +1;
-    end
-    if number_recycled_b_cells(i, final_cycles(i)) ~= 0
-        survival = survival + 1;
+% %% Final GC population
+% % of interest for debugging with 3 cycles max
+% final_pop = zeros(nb_max_B_cells,1);
+% for i = 1:nb_trial_max
+%     final_pop(number_recycled_b_cells(i, final_cycles(i)),1) = final_pop(number_recycled_b_cells(i, final_cycles(i)),1)+1;
+% end
+% figure(); bar(final_pop, 0.8);
+% title('Number of GC B cells at the end ', 'Fontweight', 'bold');
+% set(gca,'FontSize',10);
+
+%% GC success rate
+success = success / nb_trial_max;
+disp(['ratio of GCs that are successful ' num2str(success)]);
+
+%% final cycle
+figure(); histogram(final_cycles, 'Normalization', 'probability', 'BinWidth', 5);
+title('Number of cycles until GC reaction stops ', 'Fontweight', 'bold');
+set(gca,'FontSize',10);
+
+%% mutations
+gusmuts = zeros(30,1);
+total_final_cells_successful_GCs = 0;
+for i = 1:nb_trial_max
+    if number_recycled_b_cells(i, final_cycles(i)) > 0
+        for j = 1:number_recycled_b_cells(i, final_cycles(i))
+            k = B_cells(i,j,nb_Ag+3);
+            gusmuts(k+1,1) = gusmuts(k+1,1)+1;
+            total_final_cells_successful_GCs = total_final_cells_successful_GCs +1;
+        end
     end
 end
-survival = survival / n_trial_max;
-bla = bla / n_trial_max;
-disp(['ratio of GCs that survive ' num2str(survival)]);
-disp(['ratio of GCs that stop early ' num2str(bla)]);
+muts = gusmuts/total_final_cells_successful_GCs;
 
-% %% final cycle
-% figure(); histogram(final_cycles, 'Normalization', 'probability', 'BinWidth', 10);
-% title('Number of cycles for each trial', 'Fontweight', 'bold');
-% set(gca,'FontSize',6);
-%% breadth 
-% fraction of exit_cells with affinity for both Ags above a threshold for different thresholds
-% B_cells = zeros(nb_trial_max, nb_max_B_cells, nb_Ag + 2);
-% exit_cells = zeros(n_trial_max, n_cycle_max, n_Ag, floor(n_max_Bcells/4));
-% 
-% total_exit_cells = mean(number_exit_cells,1);
-% thresholds = linspace(e_act-3, e_act+2,5);
-% neutralized = zeros(n_trial_max, n_cycle_max, length(thresholds));
-% breadth = zeros(n_cycle_max,length(thresholds));
-% 
-% for t = 1:length(thresholds)
-%     for i = 1:size(exit_cells,1) %trial
-%         for j = 1:size(exit_cells,2) %cycle
-%             for k = 1:size(exit_cells,4) %bcell index
-%                    if (exit_cells(i,j,1,k) >= thresholds(t) && exit_cells(i,j,2,k) >= thresholds(t))
-%                         neutralized(i,j,t) = neutralized(i,j,t) +1;
-%                    end
-%             end
-%         end
-%     end
-% end
-% 
-% neutralized_mean = mean(neutralized,1);
-% 
-% figure();
-% plot(total_exit_cells);
-% title({['Number exit cells for 2 Ags']; ['averaged over ' num2str(n_trial_max) ' trials and conc = ' num2str(conc) ' proba CDR = ' num2str(p_CDR)]}, 'Fontweight', 'bold');
-% xlabel('Number of cycles', 'Fontweight', 'bold');
-% set(gca,'FontSize',6);
-% 
-% figure();
-% for t = 1:length(thresholds)
-%     plot(neutralized_mean(:,:,t)); hold on;
-% end
-% title({['Neutralized for 2 Ags']; ['averaged over ' num2str(n_trial_max) ' trials and conc = ' num2str(conc) ' proba CDR = ' num2str(p_CDR)]}, 'Fontweight', 'bold');
-% xlabel('Number of cycles', 'Fontweight', 'bold');
-% set(gca,'FontSize',6);
-% legendCell = strcat(strtrim(cellstr(num2str(thresholds(:)))));
-% legend(legendCell, 'fontsize',6 , 'Position', [0.75,0.65,0.15,0.25]);
-% 
-% for c = 1:n_cycle_max
-%     if total_exit_cells(c) == 0
-%         breadth(c,t) = 0;
-%     else
-%         for t = 1:length(thresholds) 
-%             breadth(c,t) = neutralized_mean(1,c,t);
-%         end
-%         breadth(c,:) = breadth(c,:)/total_exit_cells(c);
-%     end
-% end
-% 
-% figure();
-% for t = 1:length(thresholds)
-%     plot(breadth(:,t)); hold on;
-% end
-% title({['Breadth for 2 Ags']; ['averaged over ' num2str(n_trial_max) ' trials and conc = ' num2str(conc) ' proba CDR = ' num2str(p_CDR)]}, 'Fontweight', 'bold')
-% xlabel('Number of cycles', 'Fontweight', 'bold');
-% set(gca,'FontSize',6);
-% legend(legendCell, 'fontsize',6, 'Position', [0.75,0.65,0.15,0.25]);
-% 
-% %% energy and affinity over time
-% % exit_cells = zeros(n_trial_max, n_cycle_max, n_Ag, floor(n_max_Bcells/4));
-% exit_cells_averaged_trials = mean(exit_cells,1);
-% average_energy = zeros(1,n_cycle_max);
-% for c = 1:n_cycle_max
-%     if total_exit_cells(c) == 0
-%         average_energy(c) = 0;
-%     else
-%         for k = 1:size(exit_cells,4) %sum the average energy per cycle
-%             average_energy(c) = average_energy(c) + 0.5*(exit_cells_averaged_trials(1,c,1,k)+exit_cells_averaged_trials(1,c,2,k));
-%         end
-%         average_energy(c) = (average_energy(c)/total_exit_cells(c))-e_act;
-%     end
-% end
-% 
-% figure();
-% plot(average_energy);
-% title('Energy increase');
-% xlabel('Number of cycles', 'Fontweight', 'bold');
-% set(gca,'FontSize',6)
-% 
-% figure();
-% affinity = exp(average_energy);
-% plot(affinity);
-% title('Affinity');
-% xlabel('Number of cycles', 'Fontweight', 'bold');
-% set(gca,'FontSize',6)
+figure(); bar(muts, 0.8);
+title('Number of mutations for the B cells that are in the GC at the end ', 'Fontweight', 'bold');
+set(gca,'FontSize',10);
 
+%% energies at the end of the GC reaction for successful GCs
+e_conserved = zeros(total_final_cells_successful_GCs,1);
+%e_variable = zeros(nb_trial_max,nb_Ag);
+index = 1;
+for i = 1:nb_trial_max
+    if number_recycled_b_cells(i, final_cycles(i)) > 0
+        for j = 1:number_recycled_b_cells(i, final_cycles(i))
+            e_conserved(index) = B_cells(i,j,nb_Ag+1);
+            index = index +1;
+        end
+    end
+end
+figure(); histogram(e_conserved, 'Normalization', 'probability', 'BinWidth', 0.01);
+title('Conserved energies at the end of the GC reaction for successful GCs ', 'Fontweight', 'bold');
+set(gca,'FontSize',10);
+
+% %% affinities at the end of the GC reaction for successful GCs
+aff_conserved = exp(e_conserved);
+
+figure(); histogram(aff_conserved, 'Normalization', 'probability', 'BinWidth', 0.01);
+title('Conserved affinities at the end of the GC reaction for successful GCs ', 'Fontweight', 'bold');
+set(gca,'FontSize',10);
 end
