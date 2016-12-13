@@ -141,12 +141,14 @@ def main(verbose=False):
     
     # Run multiple trials and save all data to file
     
-    nb_trial = 100
+    nb_trial = 1
     start    = timer()
     
+    fgc  = open('output-gc.csv',     'w')
     fmem = open('output-memory.csv', 'w')
     ftot = open('output-total.csv',  'w')
     
+    fgc.write( 'trial,exit cycle,number,mutations,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
     fmem.write('trial,exit cycle,number,mutations,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
     ftot.write('trial,cycle,number recycled,number exit\n')
     
@@ -156,9 +158,10 @@ def main(verbose=False):
 
         # INITIALIZATION - DEFINE DATA STRUCTURES
 
-        memory_cells = []
-        nb_recycled  = []
-        nb_exit      = []
+        recycled_cells = []
+        exit_cells     = []
+        nb_recycled    = []
+        nb_exit        = []
 
         
         # CYCLES 1 + 2 - CREATE FOUNDERS AND REPLICATE WITHOUT MUTATION
@@ -181,24 +184,32 @@ def main(verbose=False):
         
         for cycle_number in range(2, nb_cycle_max):
         
-            B_cells, exit_cells = run_GC_cycle(B_cells)
-            GC_size             = np.sum([b.nb for b in B_cells])       # total number of cells in the GC
+            B_cells, out_cells = run_GC_cycle(B_cells)
+            GC_size            = np.sum([b.nb for b in B_cells])       # total number of cells in the GC
             
-            if (cycle_number==nb_cycle_max-1) or (GC_size>GC_size_max): # at the end, all B cells exit the GC
-                exit_cells += B_cells
-            else: exit_cells = []
+            #if (cycle_number==nb_cycle_max-1) or (GC_size>GC_size_max): # at the end, all B cells exit the GC
+            #    out_cells += B_cells
+            #else: out_cells = []
             
-            memory_cells.append(exit_cells)
-            nb_recycled.append(np.sum([b.nb for b in B_cells]   ))
-            nb_exit.append(    np.sum([b.nb for b in exit_cells]))
+            recycled_cells.append([deepcopy(b) for b in B_cells])
+            exit_cells.append(out_cells)
+            nb_recycled.append(np.sum([b.nb for b in B_cells]  ))
+            nb_exit.append(    np.sum([b.nb for b in out_cells]))
 
             if (nb_recycled[-1]==0) or (GC_size>GC_size_max): break
         
 
         # SAVE OUTPUT
 
-        for i in range(len(memory_cells)):
-            for b in memory_cells[i]:
+        for i in range(len(recycled_cells)):
+            for b in recycled_cells[i]:
+                fgc.write('%d,%d,%d,%d,%lf' % (t, i+2, b.nb, b.nb_mut, b.Ec))
+                for j in range(nb_Ag): fgc.write(',%lf' % b.Ev[j])
+                fgc.write('\n')
+        fgc.flush()
+
+        for i in range(len(exit_cells)):
+            for b in exit_cells[i]:
                 fmem.write('%d,%d,%d,%d,%lf' % (t, i+2, b.nb, b.nb_mut, b.Ec))
                 for j in range(nb_Ag): fmem.write(',%lf' % b.Ev[j])
                 fmem.write('\n')
@@ -209,6 +220,7 @@ def main(verbose=False):
 
     # End and output total time
     
+    fgc.close()
     fmem.close()
     ftot.close()
     
