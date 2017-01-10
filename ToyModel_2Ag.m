@@ -1,28 +1,47 @@
+%% 1 or 2 antigens only!!!!!
+%%
 clear all;
 close all;
 clc;
+%% 3 CDRs of about 10 residues each on the heavy chain. 
+% The FR represents 60-85% of the chain.
+% Shenshen used 46 CDR residues, 18 conserved (35%).
 
-%%parameters
+%% Parameters to be varied
+% number of antigens, number of B cells that seed a GC, probability that a
+% mutation occurs in the CDR not the FR, probability that a FR mutation is
+% lethal
 nb_Ag = 2;
 nb_founders = 3;
+p_CDR = 1;
+p_FR_lethal = 0.8;
+
+%% Parameters with experimental ground
+% probability that a point mutation occurs per division, the number of
+% replication steps before the SHM starts, the number of B cells for which
+% all antigens have been internalized (compared to the initial size), the
+% fraction of residues that are conserved accross all viral strains, the 
+% probabilities that a CDR mutation is lethal or silent.
+p_mut = 0.2; %per division
 rep = 9;
 nb_max_B_cells = nb_founders*2^rep;
-nb_cycle_max = 200;
-nb_trial_max = 200;
+overlap = 0.8;
+p_CDR_lethal = 0.3;
+p_CDR_silent = 0.5;
+
+%% Algorithm constants
+% These are constants who have a meaning only in this particular simulation.
+nb_cycle_max = 250;
+nb_trial_max = 50;
+
 activation_energy = 0.1;
 threshold_energy = 0.7;
 energy_scale = 0.05;
-conc = 1.2;
-overlap = 1;
-
-p_mut = 0.2; %per division
-p_CDR = 1;
-p_FR_lethal = 0.8;
+conc = 1.23;
 p_recycle = 0.7;
 t_cell_selection = 0.7;
 
-p_CDR_lethal = 0.3;
-p_CDR_silent = 0.5;
+%gevd
 kappa = -0.7;
 sigma = 1.2;
 mu = -1.5;
@@ -69,7 +88,7 @@ initial_cycle_number = 2;
 [B_cells, number_recycled_b_cells, number_exit_cells, final_cycles, success ] = runAffinityMaturation(B_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, initial_cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu);
 toc; 
 %% Analyze trials
-[muts] = analysis(success, B_cells, number_recycled_b_cells, nb_trial_max, nb_max_B_cells, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag, nb_cycle_max);
+[muts] = analysis(success, B_cells, overlap, number_recycled_b_cells, nb_trial_max, nb_max_B_cells, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag, nb_cycle_max);
 
 
 

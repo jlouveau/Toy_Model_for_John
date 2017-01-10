@@ -1,8 +1,8 @@
-close all
+%close all
 %GEVD for mutation
-k = -0.6;
-sigma = 1.8;
-mu = -1.9;
+k = -0.7;
+sigma = 1.2;
+mu = -1.5;
 
 x = linspace(-10,3,1000);
 y1 = gevpdf(x, k, sigma, mu);
