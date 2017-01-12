@@ -1,8 +1,10 @@
 %% Parameters to be varied
-% number of antigens, number of B cells that seed a GC, probability that a
+% number of antigens, the fraction of residues that are conserved across 
+% all viral strains,number of B cells that seed a GC, probability that a
 % mutation occurs in the CDR not the FR, probability that a FR mutation is
 % lethal
 nb_Ags = 2;
+overlap = 0.8;
 nb_founders = 3;
 p_CDR = 1;
 p_FR_lethal = 0.8;
@@ -10,12 +12,11 @@ p_FR_lethal = 0.8;
 %% Parameters with experimental ground
 % probability that a point mutation occurs per division, the number of
 % replication steps before the SHM starts, the number of B cells for which
-% all antigens have been internalized (compared to the initial size), the
-% fraction of residues that are conserved accross all viral strains, the 
+% all antigens have been internalized (compared to the initial size), the 
 % probabilities that a CDR mutation is lethal or silent.
 p_mut = 0.2; %per division
 rep = 9;
-overlap = 0.8;
+
 p_CDR_lethal = 0.3;
 p_CDR_silent = 0.5;
 
@@ -41,3 +42,4 @@ factor = 0.3;
 kappa = -0.7;
 sigma = 1.2;
 mu = -1.5;
+step = 5
