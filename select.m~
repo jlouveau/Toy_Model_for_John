@@ -26,14 +26,14 @@ for i = 1 : nb_B_cells
 end
 selected_B_cells = selected_B_cells(1:index, :);
 %index is the number of B cells that survive binding
-%B_cells_trial = selected_B_cells(:, 1:nb_Ag+3);
+B_cells_trial = selected_B_cells(:, 1:nb_Ag + 3);
 %disp(['n_bound ' num2str(size(B_cells_trial,1))]);
 
 %% T cell help
-selected_B_cells = sortrows(selected_B_cells, -(nb_Ag+4)); %sort by weighted_energy in descending order
+selected_B_cells = sortrows(selected_B_cells, -(params.variable_params.nb_Ags+4)); %sort by weighted_energy in descending order
 cutoff = floor(index * params.algorithm_constants.AM_constants.t_cell_selection);
 selected_B_cells = selected_B_cells(1:cutoff, :);
-%B_cells_trial = selected_B_cells(:, 1:nb_Ag + 3);
+B_cells_trial = selected_B_cells(:, 1:params.variable_params.nb_Ags + 3);
 %cutoff is the number of B cells that survive T cell selection
 %disp(['n_helped ' num2str(size(B_cells_trial,1))]);
 
@@ -46,5 +46,6 @@ while (nb_selected <= cutoff && selected_B_cells(nb_selected, params.variable_pa
     nb_selected = nb_selected + 1;
 end
 
-B_cells_trial = selected_B_cells(:, 1:nb_Ag + 3);
+
+B_cells_trial = selected_B_cells(:, 1:params.variable_params.nb_Ags + 3);
 end

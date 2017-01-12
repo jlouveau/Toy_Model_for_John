@@ -1,4 +1,4 @@
-function [survival, B_cell, weighted_energy] = bind_or_die(B_cell, nb_Ag, energy_scale, overlap, conc, activation_energy)
+function [survival, B_cell, weighted_energy] = bind_or_die(B_cell, params)
 %   "bind_or_die: tests the B-cell against ONE of the antigens present:
 %   Ag_number is the number of antigens.
 %   B-cell is a vector of length nb_Ag+1, giving the energies (between 0 and 1) of the
@@ -15,15 +15,15 @@ function [survival, B_cell, weighted_energy] = bind_or_die(B_cell, nb_Ag, energy
 %   energy_scale scales up activation_energy, it affects the auxiliary
 %   variable 'factor' exponentially.
 
-Ag_index = randi(nb_Ag); %randomly choose antigen
-B_cell(nb_Ag +2) = Ag_index;
+Ag_index = randi(params.variable_params.nb_Ags); %randomly choose antigen
+B_cell(params.variable_params.nb_Ags +2) = Ag_index;
 
 Ev = B_cell(Ag_index); %find energy for variable part of randomly chosen antigen
-Ec = B_cell(nb_Ag + 1); %find energy for conserved part
-weighted_energy = (1 - overlap)*Ev + overlap*Ec; %find overall affinity for randomly chosen antigen
+Ec = B_cell(params.variable_params.nb_Ags + 1); %find energy for conserved part
+weighted_energy = (1 - params.variable_params.overlap)*Ev + params.variable_params.overlap*Ec; %find overall affinity for randomly chosen antigen
 
-factor = conc*exp(energy_scale*(weighted_energy - activation_energy));
-langmuir = factor/(1+factor); %ratio of bound Ags over total number of B cell receptors (c.f. Shenshen)
+Factor = params.algorithm_constants.AM_constants.conc * exp(params.algorithm_constants.energy_params.energy_scale*(weighted_energy - params.algorithm_constants.energy_params.activation_energy));
+langmuir = Factor/(1+Factor); %ratio of bound Ags over total number of B cell receptors (c.f. Shenshen)
     
 r = rand;
 if r >= langmuir  %B-cell dies!

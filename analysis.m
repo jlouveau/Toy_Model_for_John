@@ -1,16 +1,17 @@
-function [muts] = analysis( success, B_cells, number_recycled_b_cells, nb_trial_max, nb_max_B_cells, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag, nb_cycle_max)
+function [muts] = analysis(success, B_cells, number_recycled_b_cells, final_cycles, params)
+%analysis( success, B_cells, overlap, number_recycled_b_cells, nb_trial_max, nb_max_B_cells, p_mut, p_recycle, t_cell_selection, conc, p_CDR, final_cycles, nb_Ag, nb_cycle_max)
 %% GC population over time
 figure();
 % x = linspace(2,200,1000);
 % curve1 = nb_max_B_cells * (4 * (1-p_mut)^2 * p_recycle * t_cell_selection * conc /(1+conc) ).^(x-2);
 % plot(x, curve1, ':');
 
-for i = 1:nb_trial_max
+for i = 1:params.algorithm_constants.AM_constants.nb_trial_max
     for j = 1:final_cycles(i)
         hold on; plot(number_recycled_b_cells(i,1:j)); 
     end
 end
-title({['Population of GC b cells for 1 Ag over time']; [' conc = ' num2str(conc) ' proba CDR = ' num2str(p_CDR)]}, 'Fontweight', 'bold');
+title({['Population of GC b cells for 2 Ags with ' num2str(params.variable_params.overlap*100) '% shared residues']; [' conc = ' num2str(params.algorithm_constants.AM_constants.conc) ' proba CDR = ' num2str(params.variable_params.p_CDR)]}, 'Fontweight', 'bold');
 xlabel('Number of cycles', 'Fontweight', 'bold');
 set(gca,'FontSize',10);
 
@@ -25,7 +26,7 @@ set(gca,'FontSize',10);
 % set(gca,'FontSize',10);
 
 %% GC success rate
-success = success / nb_trial_max;
+success = success / params.algorithm_constants.AM_constants.nb_trial_max;
 disp(['ratio of GCs that are successful ' num2str(success)]);
 
 %% final cycle
@@ -36,10 +37,10 @@ set(gca,'FontSize',10);
 %% mutations
 gusmuts = zeros(30,1);
 total_final_cells_successful_GCs = 0;
-for i = 1:nb_trial_max
+for i = 1:params.algorithm_constants.AM_constants.nb_trial_max
     if number_recycled_b_cells(i, final_cycles(i)) > 0
         for j = 1:number_recycled_b_cells(i, final_cycles(i))
-            k = B_cells(i,j,nb_Ag+3);
+            k = B_cells(i,j,params.variable_params.nb_Ags+3);
             gusmuts(k+1,1) = gusmuts(k+1,1)+1;
             total_final_cells_successful_GCs = total_final_cells_successful_GCs +1;
         end
@@ -55,10 +56,10 @@ set(gca,'FontSize',10);
 e_conserved = zeros(total_final_cells_successful_GCs,1);
 %e_variable = zeros(nb_trial_max,nb_Ag);
 index = 1;
-for i = 1:nb_trial_max
+for i = 1:params.algorithm_constants.AM_constants.nb_trial_max
     if number_recycled_b_cells(i, final_cycles(i)) > 0
         for j = 1:number_recycled_b_cells(i, final_cycles(i))
-            e_conserved(index) = B_cells(i,j,nb_Ag+1);
+            e_conserved(index) = B_cells(i,j,params.variable_params.nb_Ags+1);
             index = index +1;
         end
     end
