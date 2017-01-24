@@ -15,27 +15,29 @@ p_CDR        = 1.0                              # probability of mutation in the
 p_CDR_lethal = 0.3                              # probability that a CDR mutation is lethal
 p_CDR_silent = 0.5                              # probability that a CDR mutation is silent
 p_CDR_affect = 1. - p_CDR_lethal - p_CDR_silent # probability that a CDR mutation affects affinity
+p_var        = 0.65                             # probability that a CDR mutation affects the variable region
+p_cons       = 1.0 - p_var                      # probability that a CDR mutation affects the conserved (constant) region
 p_FR_lethal  = 0.8                              # probability that a framework (FR) mutation is lethal
 p_FR_silent  = 0.                               # probability that a FR mutation is silent
 p_FR_affect  = 1. - p_FR_lethal - p_FR_silent   # probability that a FR mutation affects affinity
 
 nb_Ag        = 2               # number of antigens
-conc         = 1.20            # antigen concentration
-energy_scale = 0.30            # inverse temperature
+conc         = 1.17            # antigen concentration
+energy_scale = 0.03            # inverse temperature
 help_cutoff  = 0.70            # only B cells in the top (help_cutoff) fraction of binders receive T cell help
 p_recycle    = 0.70            # probability that a B cell is recycled
 p_exit       = 1. - p_recycle  # probability that a B cell exits the GC
 
-
-# CHECK FOR CONGRUENCE WITH MATLAB
-c      = 0.7                                    # Generalized extreme value (GEV) distribution shape parameter
-scale  = 1.2                                    # GEV scale parameter
-loc    = -1.5                                   # GEV location parameter
-gevrnd = genextreme(c=c, scale=scale, loc=loc)  # GEV random number generator
-
 mu     = 1.9    # lognormal mean
 sigma  = 0.5    # lognormal standard deviation
+corr   = 0.2    # correlation between antigen variable regions
 o      = 3.0    # lognormal offset
+mumat  = mu * np.ones(nb_Ag)
+sigmat = sigma * np.diag(np.ones(nb_Ag))
+for i in range(nb_Ag):
+    for j in range(i+1,nb_Ag):
+        sigmat[i,j] = sigma * corr
+        sigmat[j,i] = sigma * corr
 
 
 ###### B cell clone class ######
@@ -47,16 +49,17 @@ class BCell:
         self.nb = nb                                        # default starting population size = 512 (9 rounds of division)
         
         if ('Ev' in kwargs) and ('Ec' in kwargs):
-            self.Ev = kwargs['Ev']
+            self.Ev = np.array(kwargs['Ev'])
             self.Ec = kwargs['Ec']
         
         else:
-            self.Ev = [0 for i in range(nb_Ag)] # variable region binding energy for each antigen
-            self.Ec = 0                         # constant region binding energy
+            self.Ev = np.zeros(nb_Ag) # variable region binding energy for each antigen
+            self.Ec = 0               # constant region binding energy
 
-            selected_Ag = np.random.randint(nb_Ag)
-            for i in range(nb_Ag):
-                if selected_Ag!=i: self.Ev[i] = o - np.exp(np.random.normal(mu, sigma))
+            selected_Ag          = np.random.randint(nb_Ag)
+            self.Ev              = o - np.exp(np.random.multivariate_normal(mumat, sigmat))
+            if self.Ev[selected_Ag]<0 and np.max(self.Ev)<0:
+                self.Ev[selected_Ag] = 0
 
         if 'nb_mut' in kwargs: self.nb_mut = kwargs['nb_mut']
         else:                  self.nb_mut = 0
@@ -64,13 +67,14 @@ class BCell:
         if 'last_bound' in kwargs: self.last_bound = kwargs['last_bound']
         else:                      self.last_bound = np.random.multinomial(self.nb, pvals = [1/float(nb_Ag)] * nb_Ag)
 
+    """ Return a new copy of the input BCell"""
     @classmethod
     def clone(cls, b):
-        return cls(1, Ev = [k for k in b.Ev], Ec = b.Ec, nb_mut = b.nb_mut, last_bound = b.last_bound) # Return a new copy of the input BCell
+        return cls(1, Ev = np.array([k for k in b.Ev]), Ec = b.Ec, nb_mut = b.nb_mut, last_bound = [k for k in b.last_bound])
     
     def bind_to(self, Ag):
         """ Return binding energy with input antigen. """
-        return self.Ec
+        return (p_var * self.Ev[Ag]) + (p_cons * self.Ec)
 
     def divide(self):
         """ Run one round of division. """
@@ -78,13 +82,10 @@ class BCell:
     
     def mutate_CDR(self):
         """ Change in energy due to affinity-affecting CDR mutation. """
-        #selected_Ag = np.random.randint(nb_Ag)
-        #for i in range(nb_Ag):
-        #    if selected_Ag!=i: self.Ev[i]  = np.random.rand()
-        #    #else:              self.Ev[i] += o - np.exp(np.random.normal(mu, sigma))
-        #    else:              self.Ev[i] += gevrnd.rvs()
-        #self.Ec += o - np.exp(np.random.normal(mu, sigma))
-        self.Ec     += gevrnd.rvs()
+        if np.random.rand()<p_var:
+            self.Ev += o - np.exp(np.random.multivariate_normal(mumat, sigmat))
+        else:
+            self.Ec += o - np.exp(np.random.normal(mu, sigma))
         self.nb_mut += 1
 
     def mutate_FR(self):
@@ -141,14 +142,14 @@ def main(verbose=False):
     
     # Run multiple trials and save all data to file
     
-    nb_trial = 1
+    nb_trial = 100
     start    = timer()
     
-    fgc  = open('output-gc.csv',     'w')
+    #fgc  = open('output-gc.csv',     'w')
     fmem = open('output-memory.csv', 'w')
     ftot = open('output-total.csv',  'w')
     
-    fgc.write( 'trial,exit cycle,number,mutations,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
+    #fgc.write( 'trial,exit cycle,number,mutations,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
     fmem.write('trial,exit cycle,number,mutations,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
     ftot.write('trial,cycle,number recycled,number exit\n')
     
@@ -187,9 +188,9 @@ def main(verbose=False):
             B_cells, out_cells = run_GC_cycle(B_cells)
             GC_size            = np.sum([b.nb for b in B_cells])       # total number of cells in the GC
             
-            #if (cycle_number==nb_cycle_max-1) or (GC_size>GC_size_max): # at the end, all B cells exit the GC
-            #    out_cells += B_cells
-            #else: out_cells = []
+            if (cycle_number==nb_cycle_max-1) or (GC_size>GC_size_max): # at the end, all B cells exit the GC
+                out_cells += B_cells
+            else: out_cells = []
             
             recycled_cells.append([deepcopy(b) for b in B_cells])
             exit_cells.append(out_cells)
@@ -201,12 +202,12 @@ def main(verbose=False):
 
         # SAVE OUTPUT
 
-        for i in range(len(recycled_cells)):
-            for b in recycled_cells[i]:
-                fgc.write('%d,%d,%d,%d,%lf' % (t, i+2, b.nb, b.nb_mut, b.Ec))
-                for j in range(nb_Ag): fgc.write(',%lf' % b.Ev[j])
-                fgc.write('\n')
-        fgc.flush()
+        #for i in range(len(recycled_cells)):
+        #    for b in recycled_cells[i]:
+        #        fgc.write('%d,%d,%d,%d,%lf' % (t, i+2, b.nb, b.nb_mut, b.Ec))
+        #        for j in range(nb_Ag): fgc.write(',%lf' % b.Ev[j])
+        #        fgc.write('\n')
+        #fgc.flush()
 
         for i in range(len(exit_cells)):
             for b in exit_cells[i]:
@@ -220,7 +221,7 @@ def main(verbose=False):
 
     # End and output total time
     
-    fgc.close()
+    #fgc.close()
     fmem.close()
     ftot.close()
     
@@ -267,6 +268,11 @@ def run_binding_selection(B_cells):
             
             # remove dead cells and update binding details
             n_die            = np.random.binomial(b.last_bound[i], langmuir_conj)
+            #print('')
+            #print(i,b.bind_to(i))
+            #print(b.Ev, b.Ec)
+            #print(n_die)
+            #print(b.last_bound,b.last_bound[i])
             b.nb            -= n_die
             b.last_bound[i] -= n_die
 
