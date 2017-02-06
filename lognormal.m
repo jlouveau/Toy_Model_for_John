@@ -4,7 +4,7 @@
 offset = 3.0;
 sigma = 0.5;
 mu = 1.9;
-factor = 0.3;
+factor = 1;
 
 R = factor * (offset - exp( normrnd(mu, sigma, 1, 100000)));
 T = normrnd(mu, sigma, 1, 100000);

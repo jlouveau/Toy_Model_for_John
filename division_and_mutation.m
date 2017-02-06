@@ -6,14 +6,14 @@ function [ daughters ] = division_and_mutation(B_cells_trial, params)
 
 
 %% Division
-% size of daughters = (2*nb_max_B_cells, nb_Ag +3)
+% size of daughters = (2*nb_max_B_cells, nb_Ag +5)
 daughters = cat(1,B_cells_trial, B_cells_trial);
 
 %% Somatic Hyper-Mutation 
 for n = 1:size(daughters,1)
     rand_mut = rand;   
     if rand_mut < params.experimental_params.p_mut %mutation occurs
-        %daughters(n, nb_Ag + 3) = daughters(n, nb_Ag + 3) + 1;
+        %daughters(n, nb_Ag + 5) = daughters(n, nb_Ag + 5) + 1;
         mutant = mutation(daughters(n,:), params );
 %        daughters(n,:) = mutant(1,:);
         if ~isempty(mutant)

@@ -15,12 +15,20 @@ function [survival, B_cell, weighted_energy] = bind_or_die(B_cell, params)
 %   energy_scale scales up activation_energy, it affects the auxiliary
 %   variable 'factor' exponentially.
 
+% [Ev1 Ev2 Ec flex Ag_index nb_CDR_energyaffecting_mutations nb_FR_mutations]
 Ag_index = randi(params.variable_params.nb_Ags); %randomly choose antigen
-B_cell(params.variable_params.nb_Ags +2) = Ag_index;
+B_cell(params.variable_params.nb_Ags +3) = Ag_index;
+flexi = B_cell(params.variable_params.nb_Ags +2);
+E0 = params.algorithm_constants.energy_params.threshold_energy;
 
-Ev = B_cell(Ag_index); %find energy for variable part of randomly chosen antigen
+if Ag_index == 1
+    EV = B_cell(1);
+else
+    EV = B_cell(2);
+end
 Ec = B_cell(params.variable_params.nb_Ags + 1); %find energy for conserved part
-weighted_energy = (1 - params.variable_params.overlap)*Ev + params.variable_params.overlap*Ec; %find overall affinity for randomly chosen antigen
+
+weighted_energy = (1 - params.variable_params.overlap)*(EV + flexi*E0) + params.variable_params.overlap*(1-flexi)*Ec; %find overall affinity for randomly chosen antigen
 
 Factor = params.algorithm_constants.AM_constants.conc * exp(params.algorithm_constants.energy_params.energy_scale*(weighted_energy - params.algorithm_constants.energy_params.activation_energy));
 langmuir = Factor/(1+Factor); %ratio of bound Ags over total number of B cell receptors (c.f. Shenshen)

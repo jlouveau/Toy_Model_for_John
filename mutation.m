@@ -4,10 +4,8 @@ function [ mutant ] = mutation(wildtype, params)
 %   The type of mutation is determined and its effect on the energies for 
 %   the two Ags is reported in the modified mutant matrix.
 
-% size of mutant is (1, nb_Ag +3)
-% mutant = wildtype;
-% 
-% mutant = wildtype;
+% size of mutant is (1, nb_Ag +5)
+% [Ev1 Ev2 Ec flex Ag_index nb_CDR_energyaffecting_mutations nb_FR_mutations]
 
 rand_CDR = rand;
 rand_type = rand;
@@ -20,15 +18,16 @@ if rand_CDR <= params.variable_params.p_CDR
         %disp('lethal');
         mutant = [];
     elseif rand_type > params.experimental_params.p_CDR_lethal + params.experimental_params.p_CDR_silent
-        mutant = energy_affecting_CDR_mutation(mutant, params.algorithm_constants.lognormal_params, params.algorithm_constants.gevd_params, params.algorithm_constants.distribution, params.variable_params.nb_Ags);    
-        mutant(params.variable_params.nb_Ags + 3) = mutant(params.variable_params.nb_Ags + 3) +1; %we're not counting silent mutations
+        mutant = energy_affecting_CDR_mutation(mutant, params.algorithm_constants.lognormal_params, params.algorithm_constants.gevd_params, params.algorithm_constants.distribution_CDR, params.variable_params.nb_Ags);    
+        mutant(params.variable_params.nb_Ags + 4) = mutant(params.variable_params.nb_Ags + 4) +1; %we're not counting silent mutations
     end
 else
     %% Mutation in the Framework Region
-    if rand_type < p_FR_lethal
+    if rand_type < params.variable_params.p_FR_lethal
         mutant = [];
     else
-        mutant = energy_affecting_FR_mutation(mutant, params.variable_params.overlap, params.algorithm_constants.energy_params);    
+        mutant = energy_affecting_FR_mutation(mutant, params.algorithm_constants.flexibility_params, params.algorithm_constants.distribution_FR, params.variable_params.nb_Ags); 
+        mutant(params.variable_params.nb_Ags + 5) = mutant(params.variable_params.nb_Ags + 5) +1;
     end
 end
 

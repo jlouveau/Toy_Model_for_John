@@ -26,7 +26,7 @@ nb_cycle_max = 250;
 nb_trial_max = 50;
 nb_max_B_cells = nb_founders*2^rep;
 activation_energy = 0.1;
-threshold_energy = 0.7;
+threshold_energy = 0.7; % this is the E0
 energy_scale = 0.05;
 conc = 1.23;
 p_recycle = 0.7;
@@ -43,3 +43,7 @@ kappa = -0.7;
 sigma = 1.2;
 mu = -1.5;
 step = 5
+
+%initialization
+level_to_threshold_energy = 1 or -1 (is Ec above or below E0)
+initial_flex = 0.5  %initial flexibility for all founder cells

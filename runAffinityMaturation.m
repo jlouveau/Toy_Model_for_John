@@ -2,12 +2,11 @@ function [B_cells, number_recycled_b_cells, number_exit_cells, final_cycles, suc
 %runAffinityMaturation(B_cells, number_recycled_b_cells, number_exit_cells, nb_trial_max, conc, activation_energy, threshold_energy, p_mut, p_CDR, p_FR_lethal, p_recycle, t_cell_selection, initial_cycle_number, overlap, nb_max_B_cells, nb_cycle_max, nb_Ag, energy_scale, p_CDR_lethal, p_CDR_silent, kappa, sigma, mu)
 %   "runAffinityMaturation" runs "runTrial" for each trial until the max
 %   number of trials is reached.
-%   The B_cells, exit_cells, number_recycled_b_cells and number_exit_cells 
+%   The B_cells, number_recycled_b_cells and number_exit_cells 
 %   are updated.
 
-% B_cells_trial: size = (n_max_Bcells, nb_Ag +3). Starts with the
+% B_cells_trial: size = (n_max_Bcells, nb_Ag +5). Starts with the
 % replicated founders.
-% exit_cells_trial starts as zeros(n_cycle_max, floor(n_max_Bcells/4), nb_Ag +3);
 % number_recycled_b_cells_trial starts as zeros(1, n_cycle_max);
 % number_exit_cells_trial starts as zeros(1, n_cycle_max);
 % initial_cycle_number = 2;

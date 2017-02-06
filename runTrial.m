@@ -16,8 +16,7 @@ cycle_number = initial_cycle_number;
 
 %%GC REACTION:
 %% the founders seed the GC and undergo AM. GC_cycle modifies b_cells and adds the new plasma cells. In this toy model, exit_cells designed the cells that exit the GC at the end of a cycle (memory + plasma cells).
-% exit_cells_trial = zeros(n_cycle_max, floor(n_max_Bcells/4), n_Ag + 3);
-% B_cells_trial = zeros(n_max_Bcells, nb_Ag + 3); a B_cell is [Ev1 Ev2 Ec
+% B_cells_trial = zeros(n_max_Bcells, nb_Ag + 5); a B_cell is [Ev1 Ev2 Ec
 % Ag_index nb_mutations]
 
 while 1

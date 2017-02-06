@@ -3,7 +3,7 @@ function [B_cells] = replication(founder_B_cells, params)
 % "replication" takes the founder cells and replicates them without
 % mutation.
 
-B_cells = zeros(params.algorithm_constants.AM_constants.nb_trial_max, params.algorithm_constants.AM_constants.nb_max_B_cells, params.variable_params.nb_Ags + 3);
+B_cells = zeros(params.algorithm_constants.AM_constants.nb_trial_max, params.algorithm_constants.AM_constants.nb_max_B_cells, params.variable_params.nb_Ags + 5);
 nb_founders = size(founder_B_cells,1);
 
 for f = 1 : nb_founders
