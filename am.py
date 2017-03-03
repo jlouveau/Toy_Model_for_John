@@ -11,27 +11,29 @@ from timeit import default_timer as timer   # timer for performance
 ###### Global parameters ######
     
 p_mut        = 0.2                              # probability of mutation per division round
-p_CDR        = 1.0                              # probability of mutation in the CDR region
+p_CDR        = 0.9                              # probability of mutation in the CDR region
 p_CDR_lethal = 0.3                              # probability that a CDR mutation is lethal
 p_CDR_silent = 0.5                              # probability that a CDR mutation is silent
 p_CDR_affect = 1. - p_CDR_lethal - p_CDR_silent # probability that a CDR mutation affects affinity
-p_var        = 0.65                             # probability that a CDR mutation affects the variable region
+p_var        = 0.10                             # probability that a CDR mutation affects the variable region
 p_cons       = 1.0 - p_var                      # probability that a CDR mutation affects the conserved (constant) region
-p_FR_lethal  = 0.8                              # probability that a framework (FR) mutation is lethal
+p_FR_lethal  = 0.9                              # probability that a framework (FR) mutation is lethal
 p_FR_silent  = 0.                               # probability that a FR mutation is silent
 p_FR_affect  = 1. - p_FR_lethal - p_FR_silent   # probability that a FR mutation affects affinity
 
 nb_Ag        = 2               # number of antigens
-conc         = 1.17            # antigen concentration
-energy_scale = 0.03            # inverse temperature
+conc         = 1.20            # antigen concentration
+energy_scale = 0.07            # inverse temperature
+E0           = 2.5             # mean binding energy for mixing with flexibility
+sigmaQ       = 0.05            # standard deviation for changes in flexibility with FR mutation
 help_cutoff  = 0.70            # only B cells in the top (help_cutoff) fraction of binders receive T cell help
 p_recycle    = 0.70            # probability that a B cell is recycled
 p_exit       = 1. - p_recycle  # probability that a B cell exits the GC
 
-mu     = 1.9    # lognormal mean
-sigma  = 0.5    # lognormal standard deviation
-corr   = 0.2    # correlation between antigen variable regions
-o      = 3.0    # lognormal offset
+mu     =  1.9   # lognormal mean
+sigma  =  0.5   # lognormal standard deviation
+corr   = -0.3   # correlation between antigen variable regions
+o      =  3.0   # lognormal offset
 mumat  = mu * np.ones(nb_Ag)
 sigmat = sigma * np.diag(np.ones(nb_Ag))
 for i in range(nb_Ag):
@@ -45,21 +47,31 @@ for i in range(nb_Ag):
 class BCell:
 
     def __init__(self, nb = 512, **kwargs):
-        """ Initialize clone-specific variables. """
-        self.nb = nb                                        # default starting population size = 512 (9 rounds of division)
+        """ Initialize clone-specific variables. 
+            nb          - population size
+            Ev          - binding energy for each Ag variable region
+            Ec          - binding energy for the constant region
+            Q           - overlap parameter, proxy for flexibility (most 0 ---> 1 least flexible)
+            nb_mut      - number of accumulated mutations
+            last_bound  - number of individuals that last bound each Ag """
+        
+        self.nb = nb    # default starting population size = 512 (9 rounds of division)
         
         if ('Ev' in kwargs) and ('Ec' in kwargs):
             self.Ev = np.array(kwargs['Ev'])
             self.Ec = kwargs['Ec']
         
         else:
-            self.Ev = np.zeros(nb_Ag) # variable region binding energy for each antigen
-            self.Ec = 0               # constant region binding energy
+            self.Ev = np.zeros(nb_Ag)
+            self.Ec = 0
 
             selected_Ag          = np.random.randint(nb_Ag)
             self.Ev              = o - np.exp(np.random.multivariate_normal(mumat, sigmat))
             if self.Ev[selected_Ag]<0 and np.max(self.Ev)<0:
                 self.Ev[selected_Ag] = 0
+            
+        if 'Q' in kwargs: self.Q = kwargs['Q']
+        else:             self.Q = 0.8
 
         if 'nb_mut' in kwargs: self.nb_mut = kwargs['nb_mut']
         else:                  self.nb_mut = 0
@@ -70,11 +82,11 @@ class BCell:
     """ Return a new copy of the input BCell"""
     @classmethod
     def clone(cls, b):
-        return cls(1, Ev = np.array([k for k in b.Ev]), Ec = b.Ec, nb_mut = b.nb_mut, last_bound = [k for k in b.last_bound])
+        return cls(1, Ev = np.array([k for k in b.Ev]), Ec = b.Ec, Q = b.Q, nb_mut = b.nb_mut, last_bound = [k for k in b.last_bound])
     
     def bind_to(self, Ag):
         """ Return binding energy with input antigen. """
-        return (p_var * self.Ev[Ag]) + (p_cons * self.Ec)
+        return (self.Q * (self.Ec + self.Ev[Ag])) + ((1 - self.Q) * E0)
 
     def divide(self):
         """ Run one round of division. """
@@ -89,8 +101,11 @@ class BCell:
         self.nb_mut += 1
 
     def mutate_FR(self):
-        """ Change in energy due to affinity-affecting framework (FR) mutation. """
-        pass
+        """ Change in flexibility due to affinity-affecting framework (FR) mutation. """
+        dQ = np.random.normal(0, sigmaQ)
+        if   self.Q + dQ > 1: self.Q = 1
+        elif self.Q + dQ < 0: self.Q = 0
+        else:                 self.Q = self.Q + dQ
 
     def shm(self):
         """
@@ -150,7 +165,7 @@ def main(verbose=False):
     ftot = open('output-total.csv',  'w')
     
     #fgc.write( 'trial,exit cycle,number,mutations,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
-    fmem.write('trial,exit cycle,number,mutations,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
+    fmem.write('trial,exit cycle,number,mutations,Q,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
     ftot.write('trial,cycle,number recycled,number exit\n')
     
     for t in range(nb_trial):
@@ -211,7 +226,7 @@ def main(verbose=False):
 
         for i in range(len(exit_cells)):
             for b in exit_cells[i]:
-                fmem.write('%d,%d,%d,%d,%lf' % (t, i+2, b.nb, b.nb_mut, b.Ec))
+                fmem.write('%d,%d,%d,%d,%lf,%lf' % (t, i+2, b.nb, b.nb_mut, b.Q, b.Ec))
                 for j in range(nb_Ag): fmem.write(',%lf' % b.Ev[j])
                 fmem.write('\n')
         fmem.flush()
