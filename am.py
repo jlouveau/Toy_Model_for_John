@@ -53,7 +53,8 @@ class BCell:
             Ec          - binding energy for the constant region
             Q           - overlap parameter, proxy for flexibility (most 0 ---> 1 least flexible)
             nb_mut      - number of accumulated mutations
-            last_bound  - number of individuals that last bound each Ag """
+            last_bound  - number of individuals that last bound each Ag 
+            history     - history of mutations, generation occurred, and effect on Q/Ec """
         
         self.nb = nb    # default starting population size = 512 (9 rounds of division)
         
@@ -80,11 +81,20 @@ class BCell:
         
         if 'last_bound' in kwargs: self.last_bound = kwargs['last_bound']
         else:                      self.last_bound = np.random.multinomial(self.nb, pvals = [1/float(nb_Ag)] * nb_Ag)
+    
+        if 'history' in kwargs: self.history = kwargs['history']
+        else:                   self.history = {'nb' : [self.nb], 'Q' : [self.Q], 'Ec' : [self.Ec]}
 
     """ Return a new copy of the input BCell"""
     @classmethod
     def clone(cls, b):
-        return cls(1, Ev = np.array([k for k in b.Ev]), Ec = b.Ec, Q = b.Q, nb_mut = b.nb_mut, last_bound = [k for k in b.last_bound])
+        return cls(1, Ev = deepcopy(b.Ev), Ec = b.Ec, Q = b.Q, nb_mut = b.nb_mut, last_bound = deepcopy(b.last_bound), history = deepcopy(b.history))
+    
+    def update_history(self):
+        """ Add current parameters to the history list. """
+        self.history['nb'].append(self.nb)
+        self.history['Q'].append(self.Q)
+        self.history['Ec'].append(self.Ec)
     
     def bind_to(self, Ag):
         """ Return binding energy with input antigen. """
@@ -100,6 +110,7 @@ class BCell:
             self.Ev += o - np.exp(np.random.multivariate_normal(mumat, sigmat))
         else:
             self.Ec += o - np.exp(np.random.normal(mu, sigma))
+        self.update_history()
         self.nb_mut += 1
 
     def mutate_FR(self):
@@ -108,11 +119,10 @@ class BCell:
         if   self.Q + dQ > 1: self.Q = 1
         elif self.Q + dQ < 0: self.Q = 0
         else:                 self.Q = self.Q + dQ
+        self.update_history()
 
     def shm(self):
-        """
-        Run somatic hypermutation and return self + new B cell clones.
-        """
+        """ Run somatic hypermutation and return self + new B cell clones. """
         
         # get number of cells that mutate
         new_clones = []
@@ -152,10 +162,7 @@ def usage():
 
 
 def main(verbose=False):
-    """
-    Simulate the affinity maturation process in a single germinal center (GC)
-    and save the results to a CSV file.
-    """
+    """ Simulate the affinity maturation process in a single germinal center (GC) and save the results to a CSV file. """
     
     # Run multiple trials and save all data to file
     
@@ -165,10 +172,12 @@ def main(verbose=False):
     #fgc  = open('output-gc.csv',     'w')
     fmem = open('output-memory.csv', 'w')
     ftot = open('output-total.csv',  'w')
+    fbig = open('output-largest-clone.csv', 'w')
     
     #fgc.write( 'trial,exit cycle,number,mutations,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
     fmem.write('trial,exit cycle,number,mutations,Q,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
     ftot.write('trial,cycle,number recycled,number exit\n')
+    fbig.write('trial,exit cycle,number,Q,Ec\n')
     
     for t in range(nb_trial):
     
@@ -236,12 +245,20 @@ def main(verbose=False):
 
         for i in range(len(nb_recycled)): ftot.write('%d,%d,%d,%d\n' % (t, i+1, nb_recycled[i],nb_exit[i]))
         ftot.flush()
+        
+        if len(exit_cells[-1])>0:
+            idx = np.argmax([b.nb for b in exit_cells[-1]])
+            b   = exit_cells[-1][idx]
+            for i in range(len(b.history['Q'])):
+                fbig.write('%d,%d,%d,%lf,%lf\n' % (t, len(exit_cells)-1, b.history['nb'][i], b.history['Q'][i], b.history['Ec'][i]))
+        fbig.flush()
 
     # End and output total time
     
     #fgc.close()
     fmem.close()
     ftot.close()
+    fbig.close()
     
     end = timer()
     print('\nTotal time: %lfs, average per cycle %lfs' % ((end - start),(end - start)/float(nb_trial)))
