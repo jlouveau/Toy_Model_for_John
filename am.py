@@ -10,22 +10,22 @@ from timeit import default_timer as timer   # timer for performance
 
 ###### Global parameters ######
     
-p_mut        = 0.2                              # probability of mutation per division round
-p_CDR        = 0.9                              # probability of mutation in the CDR region
-p_CDR_lethal = 0.3                              # probability that a CDR mutation is lethal
-p_CDR_silent = 0.5                              # probability that a CDR mutation is silent
+p_mut        = 0.20                             # probability of mutation per division round
+p_CDR        = 0.85                             # probability of mutation in the CDR region
+p_CDR_lethal = 0.30                             # probability that a CDR mutation is lethal
+p_CDR_silent = 0.50                             # probability that a CDR mutation is silent
 p_CDR_affect = 1. - p_CDR_lethal - p_CDR_silent # probability that a CDR mutation affects affinity
 p_var        = 0.10                             # probability that a CDR mutation affects the variable region
 p_cons       = 1.0 - p_var                      # probability that a CDR mutation affects the conserved (constant) region
-p_FR_lethal  = 0.9                              # probability that a framework (FR) mutation is lethal
+p_FR_lethal  = 0.80                             # probability that a framework (FR) mutation is lethal
 p_FR_silent  = 0.                               # probability that a FR mutation is silent
 p_FR_affect  = 1. - p_FR_lethal - p_FR_silent   # probability that a FR mutation affects affinity
 
 nb_Ag        = 10              # number of antigens
-conc         = 1.15            # antigen concentration
+conc         = 1.18            # antigen concentration
 energy_scale = 0.07            # inverse temperature
-E0           = 4.0             # mean binding energy for mixing with flexibility
-sigmaQ       = 0.10            # standard deviation for changes in flexibility with FR mutation
+E0           = 4.00            # mean binding energy for mixing with flexibility
+sigmaQ       = 0.08            # standard deviation for changes in flexibility with FR mutation
 help_cutoff  = 0.70            # only B cells in the top (help_cutoff) fraction of binders receive T cell help
 p_recycle    = 0.70            # probability that a B cell is recycled
 p_exit       = 1. - p_recycle  # probability that a B cell exits the GC
@@ -83,7 +83,7 @@ class BCell:
         else:                      self.last_bound = np.random.multinomial(self.nb, pvals = [1/float(nb_Ag)] * nb_Ag)
     
         if 'history' in kwargs: self.history = kwargs['history']
-        else:                   self.history = {'nb' : [self.nb], 'Q' : [self.Q], 'Ec' : [self.Ec]}
+        else:                   self.history = {'Q' : [self.Q], 'Ec' : [self.Ec]}
 
     """ Return a new copy of the input BCell"""
     @classmethod
@@ -92,7 +92,6 @@ class BCell:
     
     def update_history(self):
         """ Add current parameters to the history list. """
-        self.history['nb'].append(self.nb)
         self.history['Q'].append(self.Q)
         self.history['Ec'].append(self.Ec)
     
@@ -116,9 +115,13 @@ class BCell:
     def mutate_FR(self):
         """ Change in flexibility due to affinity-affecting framework (FR) mutation. """
         dQ = np.random.normal(0, sigmaQ)
-        if   self.Q + dQ > 1: self.Q = 1
-        elif self.Q + dQ < 0: self.Q = 0
-        else:                 self.Q = self.Q + dQ
+        if   self.Q + dQ > 1.0:
+            self.Q   = 1.0
+        elif self.Q + dQ < 0.1:
+            self.Q   = 0.1
+            #self.nb -= 1
+        else:
+            self.Q = self.Q + dQ
         self.update_history()
 
     def shm(self):
@@ -177,7 +180,7 @@ def main(verbose=False):
     #fgc.write( 'trial,exit cycle,number,mutations,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
     fmem.write('trial,exit cycle,number,mutations,Q,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
     ftot.write('trial,cycle,number recycled,number exit\n')
-    fbig.write('trial,exit cycle,number,Q,Ec\n')
+    fbig.write('trial,exit cycle,Q,Ec\n')
     
     for t in range(nb_trial):
     
@@ -250,7 +253,7 @@ def main(verbose=False):
             idx = np.argmax([b.nb for b in exit_cells[-1]])
             b   = exit_cells[-1][idx]
             for i in range(len(b.history['Q'])):
-                fbig.write('%d,%d,%d,%lf,%lf\n' % (t, len(exit_cells)-1, b.history['nb'][i], b.history['Q'][i], b.history['Ec'][i]))
+                fbig.write('%d,%d,%lf,%lf\n' % (t, len(exit_cells)-1, b.history['Q'][i], b.history['Ec'][i]))
         fbig.flush()
 
     # End and output total time
