@@ -51,9 +51,11 @@ class BCell:
             nb          - population size
             Ev          - binding energy for each Ag variable region
             Ec          - binding energy for the constant region
-            Q           - overlap parameter, proxy for flexibility (most 0 ---> 1 least flexible)
-            nb_mut      - number of accumulated mutations
+            Q           - overlap parameter, proxy for rigidity (most 0 ---> 1 least flexible)
+            nb_FR_mut   - number of accumulated FR mutations
+            nb_CDR_mut  - number of accumulated CDR mutations
             last_bound  - number of individuals that last bound each Ag 
+            generation  - generation in the GC reaction
             history     - history of mutations, generation occurred, and effect on Q/Ec """
         
         self.nb = nb    # default starting population size = 512 (9 rounds of division)
@@ -76,24 +78,33 @@ class BCell:
         if 'Q' in kwargs: self.Q = kwargs['Q']
         else:             self.Q = 0.8
 
-        if 'nb_mut' in kwargs: self.nb_mut = kwargs['nb_mut']
-        else:                  self.nb_mut = 0
+        if 'nb_FR_mut' in kwargs: self.nb_FR_mut = kwargs['nb_FR_mut']
+        else:                  self.nb_FR_mut = 0
+        
+        if 'nb_CDR_mut' in kwargs: self.nb_CDR_mut = kwargs['nb_CDR_mut']
+        else:                  self.nb_CDR_mut = 0
         
         if 'last_bound' in kwargs: self.last_bound = kwargs['last_bound']
         else:                      self.last_bound = np.random.multinomial(self.nb, pvals = [1/float(nb_Ag)] * nb_Ag)
-    
+        
+        if 'generation' in kwargs: self.generation = kwargs['generation']
+        else:                  self.generation = 0
+           
         if 'history' in kwargs: self.history = kwargs['history']
-        else:                   self.history = {'Q' : [self.Q], 'Ec' : [self.Ec]}
+        else:                   self.history = {'generation' : [self.generation], 'nb_FR_mut' : [self.nb_FR_mut], 'nb_CDR_mut' : [self.nb_CDR_mut], 'Q' : [self.Q], 'Ec' : [self.Ec]}
 
     """ Return a new copy of the input BCell"""
     @classmethod
     def clone(cls, b):
-        return cls(1, Ev = deepcopy(b.Ev), Ec = b.Ec, Q = b.Q, nb_mut = b.nb_mut, last_bound = deepcopy(b.last_bound), history = deepcopy(b.history))
+        return cls(1, Ev = deepcopy(b.Ev), Ec = b.Ec, Q = b.Q, generation = b.generation, nb_FR_mut = b.nb_FR_mut, nb_CDR_mut = b.nb_CDR_mut, last_bound = deepcopy(b.last_bound), history = deepcopy(b.history))
     
     def update_history(self):
         """ Add current parameters to the history list. """
         self.history['Q'].append(self.Q)
         self.history['Ec'].append(self.Ec)
+        self.history['generation'].append(self.generation)
+        self.history['nb_FR_mut'].append(self.nb_FR_mut)
+        self.history['nb_CDR_mut'].append(self.nb_CDR_mut)
     
     def bind_to(self, Ag):
         """ Return binding energy with input antigen. """
@@ -102,6 +113,7 @@ class BCell:
     def divide(self):
         """ Run one round of division. """
         self.nb *= 2
+        self.generation += 1
     
     def mutate_CDR(self):
         """ Change in energy due to affinity-affecting CDR mutation. """
@@ -109,8 +121,9 @@ class BCell:
             self.Ev += o - np.exp(np.random.multivariate_normal(mumat, sigmat))
         else:
             self.Ec += o - np.exp(np.random.normal(mu, sigma))
+        self.nb_CDR_mut += 1
         self.update_history()
-        self.nb_mut += 1
+        
 
     def mutate_FR(self):
         """ Change in flexibility due to affinity-affecting framework (FR) mutation. """
@@ -122,7 +135,8 @@ class BCell:
             #self.nb -= 1
         else:
             self.Q = self.Q + dQ
-        self.update_history()
+        self.nb_FR_mut += 1
+        self.update_history()       
 
     def shm(self):
         """ Run somatic hypermutation and return self + new B cell clones. """
@@ -178,9 +192,9 @@ def main(verbose=False):
     fbig = open('output-largest-clone.csv', 'w')
     
     #fgc.write( 'trial,exit cycle,number,mutations,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
-    fmem.write('trial,exit cycle,number,mutations,Q,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
+    fmem.write('trial,exit cycle,number,generation, FR_mutations,CDR_mutations,Q,Ec,'+(','.join(['Ev'+str(i) for i in range(nb_Ag)]))+'\n')
     ftot.write('trial,cycle,number recycled,number exit\n')
-    fbig.write('trial,exit cycle,Q,Ec\n')
+    fbig.write('trial,exit cycle,Q,Ec,generation, FR_mutations,CDR_mutations\n')
     
     for t in range(nb_trial):
     
@@ -241,7 +255,7 @@ def main(verbose=False):
         for i in range(len(exit_cells)):
             for b in exit_cells[i]:
                 if b.nb>100:
-                    fmem.write('%d,%d,%d,%d,%lf,%lf' % (t, i+2, b.nb, b.nb_mut, b.Q, b.Ec))
+                    fmem.write('%d,%d,%d,%d,%d,%d,%lf,%lf' % (t, i+2, b.nb, b.generation, b.nb_FR_mut, b.nb_CDR_mut, b.Q, b.Ec))
                     for j in range(nb_Ag): fmem.write(',%lf' % b.Ev[j])
                     fmem.write('\n')
         fmem.flush()
@@ -253,7 +267,7 @@ def main(verbose=False):
             idx = np.argmax([b.nb for b in exit_cells[-1]])
             b   = exit_cells[-1][idx]
             for i in range(len(b.history['Q'])):
-                fbig.write('%d,%d,%lf,%lf\n' % (t, len(exit_cells)-1, b.history['Q'][i], b.history['Ec'][i]))
+                fbig.write('%d,%d,%lf,%lf,%d,%d,%d\n' % (t, len(exit_cells)-1, b.history['Q'][i], b.history['Ec'][i], b.history['generation'][i], b.history['nb_FR_mut'][i], b.history['nb_CDR_mut'][i]))
         fbig.flush()
 
     # End and output total time
